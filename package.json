@@ -1,0 +1,11 @@
+{
+  "name": "invitation-mariage",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -c tailwind.config.js -i src/tailwind.input.css -o docs/css/tailwind.css --minify",
+    "serve": "npx serve docs -l 8080"
+  },
+  "devDependencies": {
+    "tailwindcss": "3.4.17"
+  }
+}

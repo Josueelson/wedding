@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#FAF8F5">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Invitation de mariage</title>
+    <meta property="og:title" content="Vous êtes invité(e) à un mariage 💍">
+    <meta property="og:description" content="Ouvrez votre invitation personnelle : confirmez votre présence et laissez un mot aux mariés.">
+    <!-- Pour l'aperçu WhatsApp avec photo, décommentez et mettez l'URL ABSOLUE de l'image :
+    <meta property="og:image" content="https://VOTRE-COMPTE.github.io/VOTRE-DEPOT/assets/images/madisa.jpg"> -->
+    <link rel="preload" href="vendor/fonts/great-vibes-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="vendor/fonts/fonts.css">
+    <link rel="stylesheet" href="vendor/fa/css/all.min.css">
+    <link rel="stylesheet" href="vendor/aos.css">
+    <link rel="stylesheet" href="css/tailwind.css">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="relative min-h-screen">
+
+    <div class="petals-container" id="falling-petals" aria-hidden="true"></div>
+
+    <div class="relative z-10 w-full overflow-x-hidden" x-data="invitationPage" x-cloak>
+
+        <!-- ===== Écran de chargement ===== -->
+        <div x-show="state === 'loading'" class="state-screen">
+            <div class="text-center space-y-4">
+                <i class="fa-solid fa-heart text-4xl text-[#F16E6E] animate-pulse"></i>
+                <p class="font-script text-3xl text-stone-700">Votre invitation arrive…</p>
+            </div>
+        </div>
+
+        <!-- ===== Lien absent / invalide / erreur ===== -->
+        <div x-show="['missing','notfound','error'].includes(state)" class="state-screen">
+            <div class="max-w-sm mx-auto text-center space-y-5">
+                <div class="w-16 h-16 rounded-full bg-white border border-[#C6A667]/40 shadow-md mx-auto flex items-center justify-center">
+                    <i class="fa-solid text-2xl text-[#C6A667]" :class="state === 'error' ? 'fa-wifi' : 'fa-envelope-open-text'"></i>
+                </div>
+                <h1 class="font-serif-luxury text-3xl font-bold text-stone-900"
+                    x-text="state === 'missing' ? 'Ouvrez votre lien personnel' : state === 'error' ? 'Connexion impossible' : 'Invitation introuvable'"></h1>
+                <p class="text-sm text-stone-600 leading-relaxed"
+                   x-text="state === 'missing'
+                        ? 'Cette page s’ouvre depuis le lien personnel que les mariés vous ont envoyé (par WhatsApp ou SMS). Cliquez à nouveau sur ce lien.'
+                        : state === 'error'
+                        ? 'Nous n’avons pas pu charger votre invitation. Vérifiez votre connexion internet puis réessayez.'
+                        : 'Ce lien ne correspond à aucune invitation. Vérifiez qu’il est complet, ou contactez les mariés.'"></p>
+                <button x-show="state === 'error'" type="button" @click="load()" class="btn-rose">
+                    <i class="fa-solid fa-rotate-right text-xs"></i> Réessayer
+                </button>
+                <a x-show="state === 'missing' && demo" href="?i=demo" class="btn-rose">Voir l'invitation de démonstration</a>
+                <a x-show="demo" href="admin/" class="block text-xs text-stone-500 underline">Ouvrir le back-office (démo)</a>
+            </div>
+        </div>
+
+        <!-- ===== Invitation ===== -->
+        <div x-show="state === 'ready'">
+
+            <template x-if="done">
+                <div class="toast border-emerald-300 text-emerald-800" role="status">
+                    <div class="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-check text-emerald-600"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-bold text-sm" x-text="status === 'confirmed' ? 'Présence confirmée, merci !' : 'Réponse enregistrée, merci !'"></p>
+                        <p class="text-xs text-stone-500">Les mariés ont bien reçu votre réponse.</p>
+                    </div>
+                </div>
+            </template>
+
+            <template x-if="err">
+                <div class="toast border-rose-300 text-rose-800" role="alert">
+                    <div class="w-9 h-9 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-exclamation text-rose-600"></i>
+                    </div>
+                    <p class="font-bold text-sm text-left" x-text="err"></p>
+                </div>
+            </template>
+
+            <header class="hero relative w-full flex flex-col justify-between items-center text-center text-white">
+                <div class="absolute inset-0 bg-gradient-to-b from-black/65 via-black/20 to-black/75 pointer-events-none"></div>
+
+                <div class="relative z-10 pt-12 px-6" data-aos="zoom-in-down" data-aos-duration="1200">
+                    <div class="inline-flex items-center gap-3 mb-2">
+                        <span class="w-8 h-px bg-gradient-to-r from-transparent to-[#C6A667]"></span>
+                        <span class="font-royal text-[11px] text-[#DFBA73] tracking-[0.3em] uppercase">Mariage Célébration</span>
+                        <span class="w-8 h-px bg-gradient-to-l from-transparent to-[#C6A667]"></span>
+                    </div>
+                    <h1 class="font-script text-5xl md:text-7xl text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.8)] tracking-wide">
+                        <span x-text="ev.groom_name"></span> <span class="text-3xl md:text-5xl font-serif-luxury text-[#DFBA73]">&amp;</span> <span x-text="ev.bride_name"></span>
+                    </h1>
+                </div>
+
+                <div class="relative z-10 pb-10 px-4 space-y-4" data-aos="fade-up" data-aos-duration="1000" data-aos-delay="300">
+                    <div class="inline-block px-6 py-2.5 rounded-full bg-black/45 backdrop-blur-md border border-[#C6A667]/40 shadow-lg">
+                        <span class="font-serif-luxury text-xl md:text-2xl text-[#FCFAF7] font-semibold tracking-wider" x-text="mainDate"></span>
+                    </div>
+                    <div>
+                        <a href="#invitation-section" class="inline-flex flex-col items-center gap-1 text-white/80 hover:text-white transition-all animate-bounce">
+                            <span class="text-[10px] uppercase font-royal tracking-[0.25em] text-[#DFBA73]">Découvrir l'invitation</span>
+                            <i class="fa-solid fa-chevron-down text-xs text-[#DFBA73]"></i>
+                        </a>
+                    </div>
+                </div>
+            </header>
+
+            <section id="invitation-section" class="invitation-frame relative py-14 px-4 flex justify-center items-center"
+                     data-aos="fade-up" data-aos-duration="1100">
+
+                <div class="max-w-md w-full mx-auto text-center py-6 px-4 space-y-4">
+
+                    <div class="space-y-1" data-aos="zoom-in" data-aos-delay="150">
+                        <span class="font-royal text-[11px] tracking-[0.25em] uppercase text-stone-500 block">Invité(e) d'honneur</span>
+                        <span class="p-2 rounded inline-block font-bold text-2xl tracking-tight" style="color: #F16E6E;" x-text="guestName"></span>
+                        <img src="assets/images/border.png" alt="" class="w-full max-w-xs mx-auto mt-1 mb-2 opacity-90">
+                    </div>
+
+                    <div class="space-y-3 font-serif-luxury text-base md:text-lg leading-relaxed text-stone-800"
+                         data-aos="fade-up" data-aos-delay="250">
+
+                        <p x-show="inv.personal_message" class="personal-note" x-text="inv.personal_message"></p>
+
+                        <p x-html="welcomeHtml"></p>
+
+                        <template x-for="c in ceremonies" :key="c.label">
+                            <p class="text-sm md:text-base text-stone-700">
+                                <strong class="text-stone-900" x-text="c.label + ' :'"></strong>
+                                <span x-text="c.text"></span>
+                            </p>
+                        </template>
+
+                        <p x-show="ev.info_text" class="text-sm md:text-base text-stone-700 whitespace-pre-line" x-text="ev.info_text"></p>
+
+                        <p x-show="ev.closing_text" class="text-sm md:text-base text-stone-700 whitespace-pre-line" x-text="ev.closing_text"></p>
+
+                        <p class="font-script text-3xl text-[#F16E6E]"><span x-text="ev.groom_name"></span> et <span x-text="ev.bride_name"></span> 💕</p>
+                    </div>
+
+                    <div class="pt-2" data-aos="zoom-in" data-aos-delay="350">
+                        <div class="inline-block px-5 py-2 rounded-xl bg-white/70 backdrop-blur-sm border border-[#C6A667]/40 shadow-sm">
+                            <span x-show="inv.table_name" class="block font-royal font-bold text-base text-[#14213D] tracking-wider" x-text="'Table : ' + inv.table_name"></span>
+                            <span class="block text-[11px] text-stone-500 font-sans mt-0.5" x-text="inv.seats + ' place(s) réservée(s)'"></span>
+                        </div>
+                    </div>
+
+                    <div id="invitation-actions" class="pt-3 flex flex-col sm:flex-row items-center justify-center gap-3"
+                         data-aos="fade-up" data-aos-delay="400">
+                        <button type="button" @click="downloadInvitation()" :disabled="downloading"
+                                class="btn-action w-full sm:w-auto" style="background: linear-gradient(135deg, #F16E6E 0%, #E05A6D 100%);">
+                            <i class="fa fa-download text-xs"></i>
+                            <span x-text="downloading ? 'Préparation…' : 'Télécharger mon invitation'"></span>
+                        </button>
+
+                        <a class="btn-action w-full sm:w-auto" style="background: #4A5568;"
+                           :href="mapUrl" target="_blank" rel="noopener noreferrer">
+                            <i class="fa fa-map-marker-alt text-xs"></i>
+                            <span>Afficher la carte</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <form class="space-y-0" id="main-rsvp-form" @submit="submitRsvp($event)" novalidate>
+
+                <section id="rsvp-section" class="py-14 px-4 bg-gradient-to-b from-[#FAF8F5] to-white border-t border-b border-[#C6A667]/20"
+                         data-aos="fade-up" data-aos-duration="1000">
+                    <div class="max-w-md mx-auto text-center space-y-6">
+
+                        <div class="space-y-2">
+                            <span class="font-royal text-[11px] text-[#C6A667] tracking-[0.3em] uppercase block">Réponse d'invitation</span>
+                            <h2 class="font-serif-luxury text-3xl md:text-4xl font-bold text-stone-900 tracking-tight">Serez-vous des nôtres ?</h2>
+                            <p class="text-xs text-stone-500 font-light" x-show="deadlineText" x-text="deadlineText"></p>
+                            <p x-show="responded" class="inline-flex items-center gap-2 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-3 py-1.5">
+                                <i class="fa-solid fa-circle-check"></i>
+                                <span x-text="'Réponse enregistrée' + (respondedAt ? ' le ' + respondedAt : '') + ' — vous pouvez la modifier.'"></span>
+                            </p>
+                        </div>
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2" role="radiogroup" aria-label="Votre réponse" data-aos="zoom-in-up" data-aos-delay="200">
+                            <label class="cursor-pointer block text-left">
+                                <input type="radio" name="status" value="confirmed" x-model="status" class="sr-only">
+                                <div class="p-4 rounded-2xl border-2 transition-all duration-300 text-center relative overflow-hidden"
+                                     :class="status === 'confirmed' ? 'border-[#C6A667] bg-white shadow-lg ring-2 ring-[#C6A667]/20' : 'border-stone-200 bg-stone-50/70'">
+                                    <div class="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center transition-colors"
+                                         :class="status === 'confirmed' ? 'bg-[#C6A667] text-white shadow-sm' : 'bg-stone-200 text-stone-500'">
+                                        <i class="fa-solid fa-champagne-glasses text-sm"></i>
+                                    </div>
+                                    <span class="block font-serif-luxury text-base font-bold text-stone-900">Avec grand plaisir</span>
+                                    <span class="block text-[11px] text-stone-500 mt-0.5">Je serai présent(e)</span>
+                                </div>
+                            </label>
+
+                            <label class="cursor-pointer block text-left">
+                                <input type="radio" name="status" value="declined" x-model="status" class="sr-only">
+                                <div class="p-4 rounded-2xl border-2 transition-all duration-300 text-center relative overflow-hidden"
+                                     :class="status === 'declined' ? 'border-stone-600 bg-white shadow-lg ring-2 ring-stone-400/20' : 'border-stone-200 bg-stone-50/70'">
+                                    <div class="w-10 h-10 rounded-full mx-auto mb-2 flex items-center justify-center transition-colors"
+                                         :class="status === 'declined' ? 'bg-stone-700 text-white shadow-sm' : 'bg-stone-200 text-stone-500'">
+                                        <i class="fa-regular fa-envelope text-sm"></i>
+                                    </div>
+                                    <span class="block font-serif-luxury text-base font-bold text-stone-900">À distance</span>
+                                    <span class="block text-[11px] text-stone-500 mt-0.5">Désolé(e), je ne pourrai pas</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div x-show="status === 'confirmed' && inv.seats > 1" x-collapse class="pt-4 border-t border-stone-100">
+                            <label class="block text-xs font-semibold text-stone-700 mb-2 font-royal tracking-wider uppercase">
+                                Nombre de personnes (max <span x-text="inv.seats"></span>)
+                            </label>
+                            <div class="inline-flex items-center gap-4 bg-white px-4 py-2 rounded-2xl border border-[#C6A667]/30 shadow-sm">
+                                <button type="button" @click="if (people > 1) people--" :disabled="people <= 1" aria-label="Moins de personnes"
+                                        class="stepper-btn">−</button>
+                                <span class="font-serif-luxury text-2xl font-bold text-[#14213D] w-8 text-center" x-text="people" aria-live="polite"></span>
+                                <button type="button" @click="if (people < inv.seats) people++" :disabled="people >= inv.seats" aria-label="Plus de personnes"
+                                        class="stepper-btn">+</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section x-show="status === 'confirmed' && ev.max_drinks > 0 && drinks.length" x-collapse
+                         class="drinks-bg py-14 px-4" data-aos="fade-up" data-aos-duration="1000">
+                    <div class="max-w-lg mx-auto luxury-glass rounded-3xl p-6 md:p-8 shadow-xl text-center space-y-6">
+
+                        <div class="space-y-1">
+                            <span class="font-royal text-[10px] text-[#C6A667] tracking-[0.3em] uppercase block">Hospitalité</span>
+                            <h3 class="font-serif-luxury font-bold text-2xl md:text-3xl text-stone-900">Vos préférences</h3>
+                            <p class="text-sm font-medium text-stone-700 pt-1">Que désirez-vous boire 🍻 ?</p>
+                            <p class="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed pt-1">
+                                Aidez les mariés dans la planification de leur événement en leur suggérant vos goûts de boissons<br>
+                                <span class="text-[#F16E6E] font-semibold" x-text="'(' + (ev.max_drinks === 1 ? 'Un goût au maximum' : ev.max_drinks + ' goûts au maximum') + ')'"></span>
+                            </p>
+                        </div>
+
+                        <template x-for="grp in drinkGroups" :key="grp.kind">
+                            <div class="space-y-3 pt-1" x-show="grp.items.length">
+                                <h6 class="font-royal text-[11px] font-bold text-stone-700 uppercase tracking-widest text-center" x-text="grp.title"></h6>
+                                <div class="flex flex-wrap justify-center gap-2.5">
+                                    <template x-for="d in grp.items" :key="d.id">
+                                        <button type="button" @click="toggleDrink(d.id)" :aria-pressed="isDrinkActive(d.id)"
+                                                class="chip" :class="isDrinkActive(d.id) ? 'chip-on' : ''" x-text="d.name"></button>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </section>
+
+                <section class="guestbook-bg relative py-16 px-4 text-white text-center"
+                         data-aos="fade-up" data-aos-duration="1100">
+
+                    <div class="absolute inset-0 bg-stone-900/70 pointer-events-none"></div>
+
+                    <div class="relative z-10 max-w-lg mx-auto space-y-5">
+                        <div class="space-y-1" data-aos="zoom-in-down" data-aos-delay="100">
+                            <span class="font-royal text-[10px] text-[#DFBA73] tracking-[0.3em] uppercase block">Témoignage &amp; Vœux</span>
+                            <h2 class="font-script text-5xl md:text-6xl text-white drop-shadow-md">Livre d'or</h2>
+                            <p class="text-sm text-stone-200 font-light"
+                               x-text="status === 'declined' ? 'Transmettez vos chaleureuses pensées aux mariés' : 'Laissez un mot doux ou une bénédiction aux mariés'">
+                            </p>
+                        </div>
+
+                        <div class="text-left pt-2" data-aos="fade-up" data-aos-delay="200">
+                            <label for="message-input" class="block text-xs uppercase font-royal tracking-widest text-[#DFBA73] mb-2">Votre message</label>
+                            <textarea id="message-input" x-model="message" rows="5" maxlength="1000" enterkeyhint="done"
+                                      placeholder="Écrivez vos vœux, félicitations ou bénédictions..."
+                                      class="w-full rounded-2xl border border-white/50 bg-black/40 backdrop-blur-md text-white p-4 text-base focus:outline-none focus:border-[#DFBA73] focus:ring-1 focus:ring-[#DFBA73] transition-all resize-none placeholder-white/50"></textarea>
+                            <p class="text-right text-[11px] text-white/50 mt-1" x-text="message.length + ' / 1000'"></p>
+                        </div>
+
+                        <div class="pt-2" data-aos="zoom-in" data-aos-delay="300">
+                            <button type="submit" :disabled="submitting"
+                                    class="btn-submit">
+                                <i x-show="submitting" class="fa-solid fa-circle-notch fa-spin"></i>
+                                <span x-text="submitting ? 'Envoi…'
+                                    : status === 'confirmed' ? (responded ? 'Mettre à jour ma présence & mes choix' : 'Confirmer ma présence & mes choix')
+                                    : status === 'declined' ? 'Transmettre mes vœux'
+                                    : 'Envoyer ma réponse'"></span>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </form>
+
+            <footer class="bg-stone-100/80 py-8 px-4 text-center text-xs text-stone-500 space-y-2 border-t border-stone-200 pb-[calc(2rem+env(safe-area-inset-bottom))]">
+                <p class="font-script text-2xl text-[#F16E6E]"><span x-text="ev.groom_name"></span> &amp; <span x-text="ev.bride_name"></span></p>
+                <p class="font-royal text-[10px] tracking-widest uppercase text-stone-400">Invitation digitale privée</p>
+                <p class="pt-1">
+                    <a :href="whatsappUrl" target="_blank" rel="noopener noreferrer"
+                       class="text-emerald-700 hover:text-emerald-800 font-semibold inline-flex items-center gap-1.5 py-2 transition-colors">
+                        <i class="fa-brands fa-whatsapp text-sm"></i>
+                        <span>Partager mes vœux sur WhatsApp</span>
+                    </a>
+                </p>
+            </footer>
+
+            <!-- Bouton flottant mobile : mène au formulaire de réponse -->
+            <div class="fab-wrap" x-show="showFab" x-transition.opacity.duration.250ms>
+                <button type="button" @click="goToRsvp()" class="fab">
+                    <i class="fa-solid fa-champagne-glasses"></i> Répondre à l'invitation
+                </button>
+            </div>
+
+            <!-- Version imprimable (capturée en image pour « Télécharger mon invitation ») -->
+            <div id="myContent" style="display: none; width: 620px; min-height: 860px; padding: 40px 30px; background-image: url('assets/images/cadre_invitation.jpg'); background-size: cover; background-position: center; box-sizing: border-box; text-align: center;">
+                <div style="max-width: 480px; margin: 0 auto; padding-top: 20px;">
+                    <p style="text-align: center; margin-bottom: 5px;">
+                        <span style="font-weight: bold; font-size: 24px; color: #F16E6E;" x-text="guestName"></span>
+                    </p>
+                    <img src="assets/images/border.png" alt="" style="width: 100%; max-width: 320px; margin: 0 auto 15px auto; display: block;">
+
+                    <p style="font-size: 15px; line-height: 1.6; color: #2F2927; margin-bottom: 12px; font-family: 'Cormorant Garamond', serif;"
+                       x-text="'C’est avec une immense joie que ' + names + ' vous convient à célébrer leur union 💍'"></p>
+
+                    <template x-for="c in ceremonies" :key="c.label">
+                        <p style="font-size: 14px; line-height: 1.5; color: #2F2927; margin-bottom: 8px; font-family: 'Cormorant Garamond', serif;">
+                            <strong x-text="c.label + ' :'"></strong> <span x-text="c.text"></span>
+                        </p>
+                    </template>
+
+                    <p style="font-size: 14px; color: #2F2927; margin: 15px 0; font-family: 'Cormorant Garamond', serif; white-space: pre-line;"
+                       x-text="ev.closing_text"></p>
+                    <p style="font-size: 18px; color: #2F2927; font-family: 'Cormorant Garamond', serif;"><em x-text="names + ' 💕'"></em></p>
+
+                    <div style="margin: 20px 0; padding: 12px; background: rgba(255, 245, 245, 0.9); border: 1px dashed #F16E6E; border-radius: 10px;">
+                        <span x-show="inv.table_name" style="font-weight: bold; font-size: 20px; color: #14213D; display: block;" x-text="'Table : ' + inv.table_name"></span>
+                        <span style="display: block; font-size: 13px; color: #6B7280; margin-top: 4px;" x-text="inv.seats + ' place(s) réservée(s)'"></span>
+                    </div>
+
+                    <p style="font-size: 12px; color: #6B7280; margin-top: 15px;" x-text="mainDate + ' • Célébration officielle'"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="vendor/aos.js"></script>
+    <script src="vendor/supabase.js"></script>
+    <script src="js/common.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/app.js"></script>
+    <script defer src="vendor/alpine-collapse.min.js"></script>
+    <script defer src="vendor/alpine.min.js"></script>
+</body>
+</html>
