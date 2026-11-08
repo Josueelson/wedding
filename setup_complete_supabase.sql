@@ -115,12 +115,19 @@ CREATE TRIGGER events_touch BEFORE UPDATE ON public.events
   FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
 
 -- ---------------------------------------------------------------------
--- 4. POLITIQUES DE SÉCURITÉ (RLS)
+-- 4. PERMISSIONS & SÉCURITÉ (RLS)
 -- ---------------------------------------------------------------------
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL ROUTINES IN SCHEMA public TO anon, authenticated, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON TABLES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON ROUTINES TO anon, authenticated, service_role;
+ALTER DEFAULT PRIVILEGES FOR ROLE postgres IN SCHEMA public GRANT ALL ON SEQUENCES TO anon, authenticated, service_role;
+
 ALTER TABLE public.events      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invitations ENABLE ROW LEVEL SECURITY;
-
-REVOKE ALL ON public.events, public.invitations FROM anon;
 
 DROP POLICY IF EXISTS events_owner ON public.events;
 CREATE POLICY events_owner ON public.events

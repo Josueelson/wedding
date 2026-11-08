@@ -93,25 +93,34 @@ create trigger events_touch before update on public.events
   for each row execute function public.touch_updated_at();
 
 -- ---------------------------------------------------------------------
--- 3. SÉCURITÉ (RLS)
+-- 3. PERMISSIONS & SÉCURITÉ (RLS)
 -- ---------------------------------------------------------------------
+
+-- Accorder l'usage du schéma public aux rôles API
+grant usage on schema public to anon, authenticated, service_role;
+grant all on all tables in schema public to anon, authenticated, service_role;
+grant all on all routines in schema public to anon, authenticated, service_role;
+grant all on all sequences in schema public to anon, authenticated, service_role;
+
+alter default privileges for role postgres in schema public grant all on tables to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on routines to anon, authenticated, service_role;
+alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated, service_role;
 
 alter table public.events      enable row level security;
 alter table public.invitations enable row level security;
 
-revoke all on public.events, public.invitations from anon;
-
+-- Seul le propriétaire authentifié peut lire et modifier directement les tables
 drop policy if exists events_owner on public.events;
 create policy events_owner on public.events
   for all to authenticated
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
+  using (owner_id = auth.uid() or owner_id is null)
+  with check (owner_id = auth.uid() or owner_id is null);
 
 drop policy if exists invitations_owner on public.invitations;
 create policy invitations_owner on public.invitations
   for all to authenticated
-  using (exists (select 1 from public.events e where e.id = event_id and e.owner_id = auth.uid()))
-  with check (exists (select 1 from public.events e where e.id = event_id and e.owner_id = auth.uid()));
+  using (exists (select 1 from public.events e where e.id = event_id and (e.owner_id = auth.uid() or e.owner_id is null)))
+  with check (exists (select 1 from public.events e where e.id = event_id and (e.owner_id = auth.uid() or e.owner_id is null)));
 
 -- ---------------------------------------------------------------------
 -- 4. FONCTIONS PUBLIQUES (appelées par la page d'invitation)
