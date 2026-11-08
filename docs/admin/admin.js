@@ -1,4 +1,4 @@
-/* Back-office des mariés — composant Alpine unique */
+/* Back-office des mariés — Mariage Civil */
 
 function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -21,29 +21,28 @@ document.addEventListener('alpine:init', () => {
     const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* ignore */ } };
     const plural = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 
-    const SETTINGS_FIELDS = ['groom_name', 'bride_name', 'civil_date', 'civil_time', 'civil_place', 'religious_date', 'religious_time',
-        'religious_place', 'reception_date', 'reception_time', 'reception_place', 'reception_address', 'map_url', 'rsvp_deadline',
-        'welcome_text', 'info_text', 'closing_text', 'share_message', 'max_drinks'];
+    const SETTINGS_FIELDS = ['groom_name', 'bride_name',
+        'civil_date', 'civil_time', 'civil_place',
+        'map_url', 'rsvp_deadline',
+        'welcome_text', 'info_text', 'closing_text', 'share_message'];
 
     const EMPTY_GUEST = () => ({
-        id: null, title: '', full_name: '', phone: '', email: '', category: '', side: '', table_name: '', seats: 1,
-        invited_civil: true, invited_religious: true, invited_reception: true,
-        personal_message: '', notes: '', status: 'pending', people_count: 1, drink_ids: []
+        id: null, title: '', full_name: '', phone: '', email: '', category: '', side: '', seats: 1,
+        personal_message: '', notes: '', status: 'pending', people_count: 1
     });
 
     Alpine.data('admin', () => ({
         Common: C,
         demo: API.isDemo,
-        titles: { home: 'Accueil', guests: 'Invités', drinks: 'Boissons', book: "Livre d'or", settings: 'Réglages' },
+        titles: { home: 'Accueil', guests: 'Invités', settings: 'Réglages' },
 
         /* ----- état ----- */
         booting: true, user: null,
         loginEmail: '', loginPass: '', loginErr: '', loggingIn: false, showPass: false,
         loading: false, loadErr: null, lastLoad: 0,
-        event: null, drinks: [], guests: [],
+        event: null, guests: [],
         tab: 'home',
         q: '', filter: 'all', sort: 'name', catFilter: '',
-        drinkView: 'drink', expandedDrink: null, bookFilter: 'all',
         sd: {}, sdOrig: '{}', sec: '',
         saving: false, toasts: [], _tid: 0,
 
@@ -52,7 +51,7 @@ document.addEventListener('alpine:init', () => {
         form: null, fe: {},
         shareId: null, shareText: '', shareQueue: [], shareFromQueue: false, qrOpen: false,
         importText: '', importRows: [], importSkipped: 0,
-        drinkDraft: null, confirmDlg: null,
+        confirmDlg: null,
 
         /* =================================================================
          *  Démarrage / authentification
@@ -97,7 +96,6 @@ document.addEventListener('alpine:init', () => {
             this.user = null;
             this.event = null;
             this.guests = [];
-            this.drinks = [];
             this.sd = {};
             this.sdOrig = '{}';
             this.tab = 'home';
@@ -119,12 +117,10 @@ document.addEventListener('alpine:init', () => {
             try {
                 const d = await API.loadAll();
                 this.event = d.event;
-                this.drinks = d.drinks;
                 this.guests = d.invitations;
                 this.lastLoad = Date.now();
                 this.loadErr = null;
                 if (!this.sdDirty) this.loadSettings();
-                if (force) this.expandedDrink = null;
             } catch (e) {
                 console.error(e);
                 if (/jwt|not authenticated|expired/i.test(e.message)) { this.logout(); return; }
@@ -147,7 +143,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         /* =================================================================
-         *  Navigation & pile de feuilles (le bouton « retour » ferme la feuille)
+         *  Navigation & pile de feuilles
          * ================================================================= */
         setTab(t) {
             if (this.stack.length) this.closeAll();
@@ -168,7 +164,7 @@ document.addEventListener('alpine:init', () => {
             this.stack.push(name);
             history.pushState({ depth: this.stack.length }, '');
         },
-        swap(name) { // remplace la feuille du dessus sans toucher à l'historique
+        swap(name) {
             this.stack[this.stack.length - 1] = name;
             history.replaceState({ depth: this.stack.length }, '');
         },
@@ -201,36 +197,20 @@ document.addEventListener('alpine:init', () => {
         },
         metaLine(g) {
             return [
-                g.table_name ? 'Table ' + g.table_name : '',
                 g.category,
                 g.status === 'confirmed' ? `${g.people_count}/${g.seats} pers.` : g.seats > 1 ? `${g.seats} places` : ''
             ].filter(Boolean).join(' · ');
         },
-        invitedTo(g) {
-            const l = [];
-            if (g.invited_civil) l.push('Mariage civil');
-            if (g.invited_religious) l.push('Bénédiction');
-            if (g.invited_reception) l.push('Réception');
-            return l.join(' · ') || 'Aucune cérémonie';
-        },
         fmtTs(ts) { return C.dateTimeFr(ts); },
         byName(a, b) { return norm(a.full_name).localeCompare(norm(b.full_name)); },
-        drinkNames(ids) {
-            const m = new Map(this.drinks.map((d) => [d.id, d.name]));
-            return (ids || []).map((id) => m.get(id)).filter(Boolean);
-        },
         sumPeople(list) { return sum(list.filter((g) => g.status === 'confirmed'), (g) => g.people_count); },
 
         /* =================================================================
          *  Statistiques (accueil)
          * ================================================================= */
-        get mainDate() {
-            const e = this.event || {};
-            return C.dateLong(e.religious_date || e.reception_date || e.civil_date);
-        },
+        get mainDate() { return C.dateLong((this.event || {}).civil_date); },
         get countdown() {
-            const e = this.event || {};
-            const d = C.daysUntil(e.religious_date || e.reception_date || e.civil_date);
+            const d = C.daysUntil((this.event || {}).civil_date);
             if (d === null) return null;
             if (d > 1) return { n: d, label: 'jours restants' };
             if (d === 1) return { n: 1, label: 'jour restant' };
@@ -253,7 +233,6 @@ document.addEventListener('alpine:init', () => {
                 pctDeclined: (declined.length / total) * 100,
                 pctCapacity: capacity ? Math.min(100, (people / capacity) * 100) : 0,
                 opened: pending.filter((x) => x.open_count > 0).length,
-                withDrinks: confirmed.filter((x) => x.drink_ids.length).length,
                 unshared: g.filter((x) => !x.shared_at).length,
                 awaiting: g.filter((x) => x.status === 'pending' && x.shared_at)
             };
@@ -262,22 +241,14 @@ document.addEventListener('alpine:init', () => {
             const s = this.st, t = [];
             if (!this.guests.length) t.push({ icon: 'fa-user-plus', text: 'Ajoutez votre premier invité', btn: 'Ajouter', fn: () => this.openForm() });
             if (s.unshared) t.push({ icon: 'fa-paper-plane', text: `${plural(s.unshared, 'invitation pas encore envoyée', 'invitations pas encore envoyées')}`, btn: 'Envoyer', fn: () => this.startQueue() });
-            if (s.awaiting.length) t.push({ icon: 'fa-bell', text: `${plural(s.awaiting.length, 'invité n’a pas encore répondu', 'invités n’ont pas encore répondu')}`, btn: 'Relancer', fn: () => this.goGuests('awaiting') });
+            if (s.awaiting.length) t.push({ icon: 'fa-bell', text: `${plural(s.awaiting.length, "invité n'a pas encore répondu", "invités n'ont pas encore répondu")}`, btn: 'Relancer', fn: () => this.goGuests('awaiting') });
             const d = C.daysUntil(this.event && this.event.rsvp_deadline);
             if (d !== null && s.pending.length) {
                 if (d < 0) t.push({ icon: 'fa-hourglass-end', text: `Date limite dépassée : ${s.pending.length} sans réponse`, btn: 'Voir', fn: () => this.goGuests('pending') });
-                else if (d <= 14) t.push({ icon: 'fa-hourglass-half', text: d === 0 ? 'Date limite de réponse : aujourd’hui' : `Date limite de réponse dans ${plural(d, 'jour', 'jours')}`, btn: 'Voir', fn: () => this.goGuests('pending') });
+                else if (d <= 14) t.push({ icon: 'fa-hourglass-half', text: d === 0 ? "Date limite de réponse : aujourd'hui" : `Date limite dans ${plural(d, 'jour', 'jours')}`, btn: 'Voir', fn: () => this.goGuests('pending') });
             }
             return t;
         },
-        get drinkStats() {
-            const conf = this.st.confirmed;
-            return this.drinks.map((d) => {
-                const gs = conf.filter((g) => g.drink_ids.includes(d.id)).sort(this.byName);
-                return { ...d, guests: gs, count: gs.length, people: sum(gs, (g) => g.people_count) };
-            }).sort((a, b) => b.count - a.count || a.sort - b.sort);
-        },
-        get drinkMax() { return Math.max(0, ...this.drinkStats.map((d) => d.count)); },
 
         /* =================================================================
          *  Invités : filtres & tri
@@ -295,7 +266,6 @@ document.addEventListener('alpine:init', () => {
         },
         get categories() { return [...new Set(this.guests.map((g) => g.category).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')); },
         get allCategories() { return [...new Set([...C.CATEGORIES, ...this.categories])]; },
-        get allTables() { return [...new Set(this.guests.map((g) => g.table_name).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr')); },
         get filteredGuests() {
             const q = norm(this.q);
             const digits = this.q.replace(/\D/g, '');
@@ -307,23 +277,12 @@ document.addEventListener('alpine:init', () => {
                 if (this.filter === 'unshared' && g.shared_at) return false;
                 if (this.catFilter && g.category !== this.catFilter) return false;
                 if (!q) return true;
-                return norm([g.title, g.full_name, g.table_name, g.category, g.email].join(' ')).includes(q)
+                return norm([g.title, g.full_name, g.category, g.email].join(' ')).includes(q)
                     || (digits.length >= 3 && String(g.phone || '').replace(/\D/g, '').includes(digits));
             });
             if (this.sort === 'name') list = list.sort(this.byName);
-            else if (this.sort === 'table') list = list.sort((a, b) => (norm(a.table_name) || '￿').localeCompare(norm(b.table_name) || '￿') || this.byName(a, b));
             else list = list.sort((a, b) => b.created_at.localeCompare(a.created_at));
             return list;
-        },
-
-        /* =================================================================
-         *  Livre d'or
-         * ================================================================= */
-        get messages() { return this.guests.filter((g) => g.message).sort((a, b) => String(b.message_at).localeCompare(String(a.message_at))); },
-        get filteredMessages() { return this.bookFilter === 'all' ? this.messages : this.messages.filter((m) => m.status === this.bookFilter); },
-        copyAllMessages() {
-            if (!this.messages.length) return this.toast('Aucun message à copier', 'err');
-            this.copy(this.messages.map((m) => `« ${m.message} »\n— ${this.label(m)}`).join('\n\n'), 'Messages copiés');
         },
 
         /* =================================================================
@@ -345,7 +304,6 @@ document.addEventListener('alpine:init', () => {
                 const row = await API.saveInvitation(this.event.id, {
                     id: g.id, status,
                     people_count: confirmed ? Math.min(Math.max(g.people_count || 1, 1), g.seats) : 0,
-                    drink_ids: confirmed ? g.drink_ids : [],
                     responded_at: status === 'pending' ? null : nowIso()
                 });
                 this.replaceGuest(row);
@@ -378,8 +336,7 @@ document.addEventListener('alpine:init', () => {
             this.fe = {};
             if (g) {
                 const f = { ...EMPTY_GUEST(), ...g };
-                for (const k of ['title', 'phone', 'email', 'category', 'side', 'table_name', 'personal_message', 'notes']) f[k] = f[k] || '';
-                f.drink_ids = (g.drink_ids || []).slice();
+                for (const k of ['title', 'phone', 'email', 'category', 'side', 'personal_message', 'notes']) f[k] = f[k] || '';
                 f.people_count = Math.max(g.people_count || 1, 1);
                 this.form = f;
             } else {
@@ -389,13 +346,6 @@ document.addEventListener('alpine:init', () => {
             if (matchMedia('(pointer: fine)').matches) setTimeout(() => document.getElementById('f-name')?.focus(), 350);
         },
         clampPeople() { if (this.form.people_count > this.form.seats) this.form.people_count = +this.form.seats; },
-        toggleFormDrink(id) {
-            const f = this.form;
-            if (f.drink_ids.includes(id)) { f.drink_ids = f.drink_ids.filter((x) => x !== id); return; }
-            const next = [...f.drink_ids, id];
-            while (next.length > (this.event.max_drinks || 1)) next.shift();
-            f.drink_ids = next;
-        },
         async saveGuest() {
             if (this.saving) return;
             const f = this.form;
@@ -404,21 +354,18 @@ document.addEventListener('alpine:init', () => {
             this.fe = fe;
             if (Object.keys(fe).length) {
                 this.toast('Vérifiez les champs en rouge', 'err');
-                this.$nextTick(() => document.querySelector('.sheet .input.err')?.scrollIntoView({ block: 'center', behavior: 'smooth' }));
                 return;
             }
             const seats = Math.min(Math.max(parseInt(f.seats, 10) || 1, 1), 50);
             const payload = {
-                id: f.id, title: f.title, full_name: f.full_name, phone: f.phone, email: f.email || '', category: f.category,
-                side: f.side, table_name: f.table_name, seats,
-                invited_civil: f.invited_civil, invited_religious: f.invited_religious, invited_reception: f.invited_reception,
+                id: f.id, title: f.title, full_name: f.full_name, phone: f.phone,
+                email: f.email || '', category: f.category, side: f.side, seats,
                 personal_message: f.personal_message, notes: f.notes
             };
             if (f.id) {
                 const before = this.guests.find((g) => g.id === f.id);
                 payload.status = f.status;
                 payload.people_count = f.status === 'confirmed' ? Math.min(Math.max(+f.people_count || 1, 1), seats) : 0;
-                payload.drink_ids = f.status === 'confirmed' ? f.drink_ids : [];
                 if (before && before.status !== f.status) payload.responded_at = f.status === 'pending' ? null : nowIso();
             }
             this.saving = true;
@@ -429,7 +376,7 @@ document.addEventListener('alpine:init', () => {
                 this.buzz([10, 30, 10]);
                 if (isNew) {
                     this.detailId = row.id;
-                    this.shareGuest(row, false, true); // ouvre le partage à la place du formulaire
+                    this.shareGuest(row, false, true);
                     this.toast('Invitation créée — partagez-la maintenant');
                 } else {
                     this.closeTop();
@@ -454,7 +401,7 @@ document.addEventListener('alpine:init', () => {
         },
         get mailHref() {
             const g = this.shareGuestObj || {};
-            return `mailto:${g.email || ''}?subject=${encodeURIComponent('Invitation au mariage de ' + C.coupleNames(this.event))}&body=${encodeURIComponent(this.shareText)}`;
+            return `mailto:${g.email || ''}?subject=${encodeURIComponent('Invitation au mariage civil de ' + C.coupleNames(this.event))}&body=${encodeURIComponent(this.shareText)}`;
         },
         shareGuest(g, fromQueue = false, replaceTop = false) {
             this.shareId = g.id;
@@ -500,9 +447,9 @@ document.addEventListener('alpine:init', () => {
         },
         async nativeShare() {
             try {
-                await navigator.share({ title: 'Invitation au mariage de ' + C.coupleNames(this.event), text: this.shareText });
+                await navigator.share({ title: 'Invitation au mariage civil de ' + C.coupleNames(this.event), text: this.shareText });
                 this.markShared(this.shareGuestObj);
-            } catch (e) { /* annulé par l'utilisateur */ }
+            } catch (e) { /* annulé */ }
         },
         async copy(text, msg = 'Copié') {
             try {
@@ -556,8 +503,19 @@ document.addEventListener('alpine:init', () => {
                 const key = norm(`${title} ${name}`);
                 if (existing.has(key)) { skipped++; return; }
                 existing.add(key);
-                const seats = Math.min(Math.max(parseInt(parts[3], 10) || 1, 1), 50);
-                rows.push({ title, full_name: name, phone: parts[1] || '', table_name: parts[2] || '', seats, category: parts[4] || '' });
+                let seats = 1;
+                let category = '';
+                if (parts[2] && /^\d+$/.test(parts[2].trim())) {
+                    seats = parseInt(parts[2].trim(), 10);
+                    category = parts[3] || '';
+                } else if (parts[3] && /^\d+$/.test(parts[3].trim())) {
+                    seats = parseInt(parts[3].trim(), 10);
+                    category = parts[4] || '';
+                } else if (parts[2]) {
+                    category = parts[2];
+                }
+                seats = Math.min(Math.max(seats || 1, 1), 50);
+                rows.push({ title, full_name: name, phone: parts[1] || '', seats, category: category.trim() });
             });
             this.importRows = rows;
             this.importSkipped = skipped;
@@ -575,15 +533,17 @@ document.addEventListener('alpine:init', () => {
         },
         exportCsv() {
             if (!this.guests.length) return this.toast('Aucun invité à exporter', 'err');
-            const head = ['Civilité', 'Nom', 'Téléphone', 'E-mail', 'Catégorie', 'Côté', 'Table', 'Places réservées', 'Statut',
-                'Personnes présentes', 'Boissons', 'Message livre d\'or', 'Lien personnel', 'Envoyée le', 'Ouvertures', 'Répondu le', 'Notes'];
+            const head = ['Civilité', 'Nom', 'Téléphone', 'E-mail', 'Catégorie', 'Côté', 'Places réservées', 'Statut',
+                'Personnes présentes', 'Lien personnel', 'Envoyée le', 'Ouvertures', 'Répondu le', 'Notes'];
             const st = { confirmed: 'Présent', declined: 'Absent', pending: 'En attente' };
             const rows = this.guests.slice().sort(this.byName).map((g) => [
-                g.title, g.full_name, g.phone, g.email, g.category, g.side ? C.SIDES[g.side] : '', g.table_name, g.seats, st[g.status],
-                g.people_count, this.drinkNames(g.drink_ids).join(', '), g.message, C.inviteUrl(g.token),
-                g.shared_at ? C.dateTimeFr(g.shared_at) : '', g.open_count, g.responded_at ? C.dateTimeFr(g.responded_at) : '', g.notes
+                g.title, g.full_name, g.phone, g.email, g.category, g.side ? C.SIDES[g.side] : '',
+                g.seats, st[g.status], g.people_count,
+                C.inviteUrl(g.token),
+                g.shared_at ? C.dateTimeFr(g.shared_at) : '', g.open_count,
+                g.responded_at ? C.dateTimeFr(g.responded_at) : '', g.notes
             ]);
-            const csv = '﻿' + [head, ...rows].map((r) => r.map(C.csvCell).join(';')).join('\r\n');
+            const csv = '\uFEFF' + [head, ...rows].map((r) => r.map(C.csvCell).join(';')).join('\r\n');
             const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
             const a = document.createElement('a');
             a.href = url;
@@ -611,68 +571,24 @@ document.addEventListener('alpine:init', () => {
             const sd = this.sd || {};
             return [
                 { id: 'couple', icon: 'fa-heart', title: 'Les mariés', sub: `${sd.groom_name || ''} & ${sd.bride_name || ''}` },
-                { id: 'dates', icon: 'fa-calendar-days', title: 'Cérémonies et lieux', sub: C.dateLong(sd.religious_date) || 'Dates, heures, adresses' },
+                { id: 'dates', icon: 'fa-calendar-days', title: 'Mariage civil — Lieu & date', sub: C.dateLong(sd.civil_date) || 'Date, heure, adresse' },
                 { id: 'texts', icon: 'fa-pen-fancy', title: "Textes de l'invitation", sub: 'Accueil, informations, mot de fin' },
-                { id: 'rsvp', icon: 'fa-reply', title: 'Réponses des invités', sub: sd.rsvp_deadline ? 'Avant le ' + C.dateNoDay(sd.rsvp_deadline) : 'Date limite, boissons' },
+                { id: 'rsvp', icon: 'fa-reply', title: 'Réponses des invités', sub: sd.rsvp_deadline ? 'Avant le ' + C.dateNoDay(sd.rsvp_deadline) : 'Date limite de réponse' },
                 { id: 'share', icon: 'fa-share-nodes', title: "Message d'envoi", sub: 'Modèle WhatsApp / SMS' },
-                { id: 'drinks', icon: 'fa-wine-glass', title: 'Boissons proposées', sub: this.drinks.filter((d) => d.active).length + ' boissons actives' },
                 { id: 'account', icon: 'fa-user-lock', title: 'Compte', sub: this.user ? this.user.email : '' }
             ];
         },
         async saveSettings() {
             const sd = this.sd;
             if (!sd.bride_name.trim() || !sd.groom_name.trim()) { this.sec = 'couple'; return this.toast('Les deux prénoms sont obligatoires', 'err'); }
-            if (!String(sd.share_message || '').includes('{lien}')) { this.sec = 'share'; return this.toast('Le message d’envoi doit contenir {lien}', 'err'); }
+            if (!String(sd.share_message || '').includes('{lien}')) { this.sec = 'share'; return this.toast('Le message d\'envoi doit contenir {lien}', 'err'); }
             this.saving = true;
             try {
-                this.event = await API.saveEvent(this.event.id, { ...sd, max_drinks: Math.min(Math.max(+sd.max_drinks || 0, 0), 10) });
+                this.event = await API.saveEvent(this.event.id, sd);
                 this.loadSettings();
                 this.buzz([10, 30, 10]);
                 this.toast('Réglages enregistrés');
             } catch (e) { this.fail(e); } finally { this.saving = false; }
-        },
-
-        /* ----- Boissons ----- */
-        openDrink(d) {
-            this.drinkDraft = d ? { ...d } : { id: null, name: '', kind: 'soft', active: true };
-            this.open('drink');
-        },
-        async saveDrinkDraft() {
-            const d = this.drinkDraft;
-            if (!d.name.trim()) return this.toast('Donnez un nom à la boisson', 'err');
-            this.saving = true;
-            try {
-                if (!d.id) d.sort = Math.max(0, ...this.drinks.map((x) => x.sort)) + 10;
-                const row = await API.saveDrink(this.event.id, d);
-                const i = this.drinks.findIndex((x) => x.id === row.id);
-                if (i >= 0) this.drinks[i] = row; else this.drinks.push(row);
-                this.closeTop();
-                this.toast('Boisson enregistrée');
-            } catch (e) { this.fail(e); } finally { this.saving = false; }
-        },
-        async toggleDrinkActive(d) {
-            const old = d.active;
-            d.active = !old;
-            try { await API.saveDrink(this.event.id, { ...d }); this.buzz(); }
-            catch (e) { d.active = old; this.fail(e); }
-        },
-        askDeleteDrink(d) {
-            this.confirmDlg = {
-                title: 'Supprimer cette boisson ?',
-                text: `« ${d.name} » ne sera plus proposée et disparaîtra des choix déjà faits par vos invités.`,
-                label: 'Supprimer',
-                fn: async () => {
-                    this.saving = true;
-                    try {
-                        await API.deleteDrink(d.id);
-                        this.drinks = this.drinks.filter((x) => x.id !== d.id);
-                        this.guests.forEach((g) => { g.drink_ids = g.drink_ids.filter((x) => x !== d.id); });
-                        this.closeAll();
-                        this.toast('Boisson supprimée');
-                    } catch (e) { this.fail(e); } finally { this.saving = false; }
-                }
-            };
-            this.open('confirm');
         }
     }));
 });

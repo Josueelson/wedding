@@ -1,0 +1,39 @@
+-- =====================================================================
+--  Insertion des 22 invités — Mariage Civil Elvis Lusima & Celia Petemoya
+--  Schéma simplifié (civil uniquement)
+--  À exécuter dans : Supabase > SQL Editor > New query > Run
+-- =====================================================================
+
+DO $$
+DECLARE
+  v_event_id uuid;
+BEGIN
+  SELECT id INTO v_event_id FROM public.events LIMIT 1;
+
+  INSERT INTO public.invitations (event_id, title, full_name, phone, seats, category)
+  VALUES
+    (v_event_id, 'Couple', 'Patty et Joëlle',      '0998731595', 2, 'Amis'),
+    (v_event_id, 'Couple', 'John et Jonathan',      '0846878017', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Regaen et Dorcas',      '0971415745', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Mubulayi',              '0854442712', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Okito',                 '0840443447', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Kyaku',                 '0998323511', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Kashala',               '0997108999', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Mpongo',                '0907159998', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Heri',                  '0995253085', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Nyalosaso',             '0977007153', 2, 'Amis'),
+    (v_event_id, 'Mme',    'Ange et Chekinah',      '0998871796', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Dédé',                  '0994753663', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Kananga',               '0822245627', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Kanangila',             '0893374618', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Assani',                '0971158677', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Mutatshi',              '0970485226', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Monga',                 '0852053742', 2, 'Amis'),
+    (v_event_id, 'Mme',    'Maïsha et Apolline',    '0828736129', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Poy',                   '0992566746', 2, 'Amis'),
+    (v_event_id, 'Couple', 'Albert',                '0995830674', 2, 'Amis'),
+    (v_event_id, 'Mme',    'Mwanvua',               '0975410527', 1, 'Amis'),
+    (v_event_id, 'Mr',     'Hortense et Dorcas',    '0978585839', 2, 'Amis');
+
+  RAISE NOTICE '22 invités insérés avec succès pour l''événement %', v_event_id;
+END $$;

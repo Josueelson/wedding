@@ -17,6 +17,6 @@ window.APP_CONFIG = {
 
     // Laisser vide : l'adresse publique est déduite automatiquement.
     // À renseigner seulement si vous utilisez un domaine personnalisé différent,
-    // ex. 'https://mariage-jeanine-philippe.com/'
+    // ex. 'https://mariage-elvis-celia.com/'
     SITE_URL: ''
 };

@@ -4,7 +4,7 @@
     const MONTHS = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
     const DAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
 
-    // 'YYYY-MM-DD' -> Date locale (évite le décalage de fuseau de new Date('2026-11-01'))
+    // 'YYYY-MM-DD' -> Date locale (évite le décalage de fuseau de new Date('2026-12-06'))
     function parseDate(iso) {
         if (!iso) return null;
         const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso);
@@ -12,17 +12,17 @@
     }
     const dayNum = (d) => (d.getDate() === 1 ? '1er' : String(d.getDate()));
 
-    // "dimanche 1er novembre"
+    // "dimanche 6 décembre"
     function dateShort(iso) {
         const d = parseDate(iso);
         return d ? `${DAYS[d.getDay()]} ${dayNum(d)} ${MONTHS[d.getMonth()]}` : '';
     }
-    // "dimanche 1er novembre 2026"
+    // "dimanche 6 décembre 2026"
     function dateLong(iso) {
         const d = parseDate(iso);
         return d ? `${dateShort(iso)} ${d.getFullYear()}` : '';
     }
-    // "1er novembre 2026"
+    // "6 décembre 2026"
     function dateNoDay(iso) {
         const d = parseDate(iso);
         return d ? `${dayNum(d)} ${MONTHS[d.getMonth()]} ${d.getFullYear()}` : '';
@@ -58,7 +58,7 @@
 
     const guestLabel = (g) => [g.title, g.full_name].filter(Boolean).join(' ').trim();
 
-    // Adresse publique de la page d'invitation (dossier parent de /admin/)
+    // Adresse publique de la page d'invitation
     function siteBase() {
         if (cfg.SITE_URL) return cfg.SITE_URL.replace(/\/?$/, '/');
         const u = new URL(location.href);
@@ -73,39 +73,31 @@
     const coupleNames = (ev) => `${ev.groom_name} et ${ev.bride_name}`;
 
     const DEFAULT_SHARE_MESSAGE =
-        'Bonjour {nom} 👋\n\n{mariés} ont la joie de vous inviter à leur mariage. ' +
-        'Voici votre invitation personnelle : vous pouvez y confirmer votre présence, ' +
-        'choisir vos boissons et laisser un mot aux mariés.\n\n{lien}';
+        'Bonjour {nom} 👋\n\n{mariés} ont la joie de vous inviter à leur mariage civil. ' +
+        'Voici votre invitation personnelle : vous pouvez y confirmer votre présence ' +
+        'et laisser un mot aux mariés.\n\n{lien}';
 
     function renderShareMessage(tpl, ev, guest) {
         return (tpl || DEFAULT_SHARE_MESSAGE)
             .replaceAll('{nom}', guestLabel(guest))
             .replaceAll('{mariés}', coupleNames(ev))
-            .replaceAll('{date}', dateLong(ev.religious_date || ev.reception_date || ev.civil_date))
+            .replaceAll('{date}', dateLong(ev.civil_date))
             .replaceAll('{lien}', inviteUrl(guest.token));
     }
 
-    // Valeurs initiales d'un nouvel événement (mariage de démonstration)
+    // Valeurs initiales de l'événement (mariage civil Elvis & Celia)
     const DEFAULT_EVENT = {
-        groom_name: 'Philippe',
-        bride_name: 'Jeanine',
-        civil_date: '2026-10-30',
-        civil_time: '8h30',
-        civil_place: 'commune de Kamalondo',
-        religious_date: '2026-11-01',
-        religious_time: '8h30',
-        religious_place: "avenue Biayi, contre Kalemie quartier Kamatete, en diagonale de l'école l'émission aire",
-        reception_date: '2026-11-01',
-        reception_time: '18h30',
-        reception_place: 'Salle Bunker',
-        reception_address: "Avenue du 30 Juin, avant l'église Saint Marc",
-        map_url: 'https://www.google.com/maps/search/?api=1&query=Salle+Bunker+avenue+du+30+Juin+église+Saint+Marc+Lubumbashi',
-        rsvp_deadline: '2026-10-25',
-        welcome_text: "C'est avec une immense joie que {mariés} vous convient à célébrer leur union.",
-        info_text: "Tenue de cérémonie chic & élégante. Votre présence rendra cette journée encore plus spéciale.\n\nMerci de respecter l'horaire : la salle n'est disponible que 4 heures.",
-        closing_text: "Au plaisir de vous retrouver pour cette occasion spéciale.\nAvec tout notre amour,",
-        share_message: DEFAULT_SHARE_MESSAGE,
-        max_drinks: 2
+        groom_name:    'Elvis Lusima',
+        bride_name:    'Celia Petemoya',
+        civil_date:    '2026-12-06',
+        civil_time:    '',
+        civil_place:   'Golf Faustin, Deuxième marché, Avenue Kabongo',
+        map_url:       'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
+        rsvp_deadline: '',
+        welcome_text:  "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage civil.",
+        info_text:     "Tenue de cérémonie chic & élégante. Votre présence rendra cette journée encore plus spéciale.",
+        closing_text:  "Au plaisir de vous retrouver pour cette occasion spéciale.\nAvec tout notre amour,",
+        share_message: DEFAULT_SHARE_MESSAGE
     };
 
     const TITLES = ['Mr', 'Mme', 'Mlle', 'Dr', 'Me', 'Pasteur', 'Prof.', 'Famille', 'Couple'];
@@ -115,8 +107,8 @@
     // Échappe une cellule CSV (séparateur ;, compatible Excel FR)
     const csvCell = (v) => {
         let s = v == null ? '' : String(v);
-        if (/^[=+\-@]/.test(s)) s = "'" + s; // neutralise l'injection de formules
-        return /[";\n\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+        if (/^[=+\-@]/.test(s)) s = "'" + s;
+        return /[";\\n\\r]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
     };
 
     window.Common = {

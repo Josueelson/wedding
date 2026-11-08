@@ -32,7 +32,7 @@ body {
 
 /* ---------- Sections ---------- */
 .hero {
-    background: url('../assets/images/madisa.jpg') no-repeat center center / cover;
+    background: url('../assets/images/elvis.jpg') no-repeat center center / cover;
     height: 92vh;
     height: 92svh;
     min-height: 520px;
@@ -42,8 +42,6 @@ body {
     background: url('../assets/images/cadre_invitation.jpg') no-repeat center center / cover;
     min-height: 750px;
 }
-.drinks-bg { background: url('../assets/images/bobo.jpg') center / cover; }
-.guestbook-bg { background: url('../assets/images/livre_d_or.jpg') no-repeat center center / cover; }
 
 .state-screen {
     min-height: 100vh;

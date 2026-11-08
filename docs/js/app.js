@@ -1,10 +1,10 @@
-/* Page d'invitation — chargée via le lien personnel  /?i=<jeton> */
+/* Page d'invitation — chargée via le lien personnel /?i=<jeton> */
 
 (function petals() {
     const container = document.getElementById('falling-petals');
     if (!container || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
     const items = ['🌸', '💕', '🌹', '❤', '💮', '♥', '🌺', '❥'];
-    const count = innerWidth < 640 ? 8 : 16; // moins d'éléments animés sur mobile = batterie préservée
+    const count = innerWidth < 640 ? 8 : 16;
     for (let i = 0; i < count; i++) {
         const el = document.createElement('div');
         el.className = 'falling-petal';
@@ -37,12 +37,10 @@ document.addEventListener('alpine:init', () => {
         state: 'loading',          // loading | missing | notfound | error | ready
         demo: window.Api.isDemo,
         token: null,
-        ev: {}, inv: {}, drinks: [],
+        ev: {}, inv: {},
 
         status: null,              // null tant que l'invité n'a pas choisi
         people: 1,
-        selected: [],
-        message: '',
         responded: false,
         respondedIso: null,
 
@@ -66,17 +64,14 @@ document.addEventListener('alpine:init', () => {
                 if (!data) { this.state = 'notfound'; return; }
                 this.ev = data.event;
                 this.inv = data.invitation;
-                this.drinks = data.drinks || [];
-                document.title = `Mariage ${C.coupleNames(this.ev)}`;
+                document.title = `Mariage Civil — ${C.coupleNames(this.ev)}`;
 
                 if (this.inv.status !== 'pending') {
                     this.status = this.inv.status;
                     this.people = Math.max(this.inv.people_count || 1, 1);
-                    this.selected = (this.inv.drink_ids || []).slice();
                     this.responded = true;
                     this.respondedIso = this.inv.responded_at;
                 }
-                this.message = this.inv.message || '';
                 this.state = 'ready';
                 this.$nextTick(() => this.afterReady());
             } catch (e) {
@@ -96,8 +91,6 @@ document.addEventListener('alpine:init', () => {
                 }
                 AOS.refreshHard();
             }
-            // Bouton flottant « Répondre » : visible pendant la lecture de la carte, masqué
-            // quand les boutons d'action ou le formulaire sont à l'écran.
             const hidden = new Set();
             const update = () => { this.showFab = !this.responded && hidden.size === 0 && scrollY > 320; };
             if ('IntersectionObserver' in window) {
@@ -115,35 +108,24 @@ document.addEventListener('alpine:init', () => {
         /* ---------- Texte dynamique ---------- */
         get names() { return C.coupleNames(this.ev); },
         get guestName() { return C.guestLabel(this.inv); },
-        get mainDate() { return C.dateLong(this.ev.religious_date || this.ev.reception_date || this.ev.civil_date); },
+        get mainDate() { return C.dateLong(this.ev.civil_date); },
         get respondedAt() { return this.respondedIso ? C.dateTimeFr(this.respondedIso) : ''; },
 
         get welcomeHtml() {
-            const tpl = this.ev.welcome_text || "C'est avec une immense joie que {mariés} vous convient à célébrer leur union.";
+            const tpl = this.ev.welcome_text || "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage civil.";
             return escapeHtml(tpl).replaceAll('{mariés}', `<strong class="text-stone-900">${escapeHtml(this.names)}</strong>`);
         },
 
-        get ceremonies() {
-            const e = this.ev, i = this.inv, out = [];
-            const line = (date, time, ...places) => {
-                const when = [C.dateShort(date), time ? `à ${time}` : ''].filter(Boolean).join(' ');
-                return [when, ...places.filter(Boolean)].filter(Boolean).join(', ') + '.';
-            };
-            if (i.invited_civil && (e.civil_date || e.civil_place)) {
-                out.push({ label: 'Mariage civil', text: line(e.civil_date, e.civil_time, e.civil_place) });
-            }
-            if (i.invited_religious && (e.religious_date || e.religious_place)) {
-                out.push({ label: 'Bénédiction nuptiale', text: line(e.religious_date, e.religious_time, e.religious_place) });
-            }
-            if (i.invited_reception && (e.reception_date || e.reception_place || e.reception_address)) {
-                out.push({ label: 'La réception', text: line(e.reception_date, e.reception_time, e.reception_place, e.reception_address) });
-            }
-            return out;
+        get civilLine() {
+            const e = this.ev;
+            if (!e.civil_date && !e.civil_place) return '';
+            const when = [C.dateShort(e.civil_date), e.civil_time ? `à ${e.civil_time}` : ''].filter(Boolean).join(' ');
+            return [when, e.civil_place].filter(Boolean).join(', ') + '.';
         },
 
         get mapUrl() {
             if (this.ev.map_url) return this.ev.map_url;
-            const q = this.ev.reception_address || this.ev.reception_place || this.ev.religious_place || '';
+            const q = this.ev.civil_place || '';
             return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
         },
 
@@ -155,29 +137,8 @@ document.addEventListener('alpine:init', () => {
                 : `Merci d'indiquer votre présence avant le ${C.dateNoDay(d)}.`;
         },
 
-        get drinkGroups() {
-            return [
-                { kind: 'alcohol', title: 'Boissons alcoolisées', items: this.drinks.filter((d) => d.kind === 'alcohol') },
-                { kind: 'soft', title: 'Boissons non alcoolisées', items: this.drinks.filter((d) => d.kind !== 'alcohol') }
-            ];
-        },
-
         get whatsappUrl() {
-            return 'https://wa.me/?text=' + encodeURIComponent(`Félicitations pour le mariage de ${this.names} !`);
-        },
-
-        /* ---------- Boissons ---------- */
-        isDrinkActive(id) { return this.selected.includes(id); },
-        toggleDrink(id) {
-            if (this.selected.includes(id)) {
-                this.selected = this.selected.filter((x) => x !== id);
-                return;
-            }
-            const next = [...this.selected, id];
-            const max = this.ev.max_drinks || 1;
-            while (next.length > max) next.shift(); // le plus ancien choix est remplacé
-            this.selected = next;
-            if (navigator.vibrate) navigator.vibrate(8);
+            return 'https://wa.me/?text=' + encodeURIComponent(`Félicitations pour le mariage civil de ${this.names} !`);
         },
 
         /* ---------- Actions ---------- */
@@ -196,7 +157,7 @@ document.addEventListener('alpine:init', () => {
             if (this.submitting) return;
             this.err = null;
             if (!this.status) {
-                this.flashError('Dites-nous d’abord si vous serez des nôtres.');
+                this.flashError("Dites-nous d'abord si vous serez des nôtres.");
                 this.goToRsvp();
                 return;
             }
@@ -204,13 +165,10 @@ document.addEventListener('alpine:init', () => {
             try {
                 const res = await window.Api.submitRsvp(this.token, {
                     status: this.status,
-                    people: this.status === 'confirmed' ? this.people : 0,
-                    drinks: this.status === 'confirmed' ? this.selected : [],
-                    message: this.message
+                    people: this.status === 'confirmed' ? this.people : 0
                 });
                 this.responded = true;
                 this.respondedIso = res.responded_at;
-                if (this.status === 'declined') this.selected = [];
                 this.done = true;
                 clearTimeout(this._doneT);
                 this._doneT = setTimeout(() => { this.done = false; }, 6000);
@@ -240,7 +198,6 @@ document.addEventListener('alpine:init', () => {
                 const filename = 'Invitation - ' + this.guestName.replace(/[^\p{L}\p{N}]+/gu, '_') + '.png';
                 const file = new File([blob], filename, { type: 'image/png' });
 
-                // Sur mobile : feuille de partage native (« Enregistrer l'image », WhatsApp…)
                 if (matchMedia('(pointer: coarse)').matches && navigator.canShare && navigator.canShare({ files: [file] })) {
                     try { await navigator.share({ files: [file], title: 'Mon invitation' }); return; }
                     catch (e) { if (e.name === 'AbortError') return; }
@@ -255,7 +212,7 @@ document.addEventListener('alpine:init', () => {
                 setTimeout(() => URL.revokeObjectURL(url), 4000);
             } catch (e) {
                 console.error(e);
-                this.flashError('Impossible de générer l’image. Réessayez dans un instant.');
+                this.flashError("Impossible de générer l'image. Réessayez dans un instant.");
             } finally {
                 this.downloading = false;
             }
