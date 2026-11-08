@@ -51,20 +51,27 @@ body {
     border-top: 1px solid var(--line);
     padding-bottom: env(safe-area-inset-bottom);
 }
-.tabbar-inner { max-width: 44rem; margin: 0 auto; display: grid; grid-template-columns: repeat(5, 1fr); height: var(--tabbar-h); }
+.tabbar-inner {
+    max-width: 44rem;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    height: var(--tabbar-h);
+    width: 100%;
+}
 .tab {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    font-size: 10.5px; font-weight: 500; color: #A8A29E; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    font-size: 11px; font-weight: 500; color: #A8A29E; position: relative; width: 100%; height: 100%;
     transition: color .2s;
 }
-.tab i { font-size: 18px; transition: transform .2s; }
+.tab i { font-size: 19px; transition: transform .2s; }
 .tab[aria-current="page"] { color: var(--rose-dark); }
 .tab[aria-current="page"] i { transform: translateY(-1px) scale(1.08); }
 .tab[aria-current="page"]::before {
-    content: ''; position: absolute; top: 0; width: 28px; height: 3px; border-radius: 0 0 4px 4px; background: var(--rose);
+    content: ''; position: absolute; top: 0; width: 44px; height: 3px; border-radius: 0 0 4px 4px; background: var(--rose);
 }
 .tab .dot {
-    position: absolute; top: 9px; left: calc(50% + 6px); min-width: 16px; height: 16px; padding: 0 4px;
+    position: absolute; top: 9px; left: calc(50% + 10px); min-width: 16px; height: 16px; padding: 0 4px;
     border-radius: 9999px; background: var(--rose); color: #fff; font-size: 10px; font-weight: 600;
     display: flex; align-items: center; justify-content: center;
 }

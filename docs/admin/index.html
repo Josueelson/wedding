@@ -320,9 +320,9 @@
             </section>
         </main>
 
-        <!-- ============ Barre d'onglets (3 onglets au lieu de 5) ============ -->
+        <!-- ============ Barre d'onglets (3 onglets bien répartis) ============ -->
         <nav class="tabbar" aria-label="Navigation principale">
-            <div class="tabbar-inner !grid-cols-3">
+            <div class="tabbar-inner">
                 <button class="tab" @click="setTab('home')" :aria-current="tab === 'home' ? 'page' : null"><i class="fa-solid fa-house"></i>Accueil</button>
                 <button class="tab" @click="setTab('guests')" :aria-current="tab === 'guests' ? 'page' : null"><i class="fa-solid fa-user-group"></i>Invités</button>
                 <button class="tab" @click="setTab('settings')" :aria-current="tab === 'settings' ? 'page' : null"><i class="fa-solid fa-gear"></i>Réglages
