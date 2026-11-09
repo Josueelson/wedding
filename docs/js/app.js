@@ -64,7 +64,7 @@ document.addEventListener('alpine:init', () => {
                 if (!data) { this.state = 'notfound'; return; }
                 this.ev = data.event;
                 this.inv = data.invitation;
-                document.title = `Mariage Civil — ${C.coupleNames(this.ev)}`;
+                document.title = `Mariage Coutumier — ${C.coupleNames(this.ev)}`;
 
                 if (this.inv.status !== 'pending') {
                     this.status = this.inv.status;
@@ -112,7 +112,7 @@ document.addEventListener('alpine:init', () => {
         get respondedAt() { return this.respondedIso ? C.dateTimeFr(this.respondedIso) : ''; },
 
         get welcomeHtml() {
-            const tpl = this.ev.welcome_text || "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage civil.";
+            const tpl = this.ev.welcome_text || "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage coutumier.";
             return escapeHtml(tpl).replaceAll('{mariés}', `<strong class="text-stone-900">${escapeHtml(this.names)}</strong>`);
         },
 
@@ -138,7 +138,7 @@ document.addEventListener('alpine:init', () => {
         },
 
         get whatsappUrl() {
-            return 'https://wa.me/?text=' + encodeURIComponent(`Félicitations pour le mariage civil de ${this.names} !`);
+            return 'https://wa.me/?text=' + encodeURIComponent(`Félicitations pour le mariage coutumier de ${this.names} !`);
         },
 
         /* ---------- Actions ---------- */

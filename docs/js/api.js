@@ -1,5 +1,5 @@
 /*
- * Couche d'accès aux données — Mariage Civil
+ * Couche d'accès aux données — Mariage Coutumier
  * Deux implémentations de la MÊME interface :
  *   - Supabase (production)  : si APP_CONFIG.SUPABASE_URL est renseigné
  *   - Démo (localStorage)    : sinon, pour tester sans backend

@@ -1,6 +1,6 @@
 -- =====================================================================
---  Mariage Civil — Elvis Lusima & Celia Petemoya
---  Schéma simplifié : invitation civile uniquement
+--  Mariage Coutumier — Elvis Lusima & Celia Petemoya
+--  Schéma simplifié : invitation coutumière uniquement
 --  (sans boissons, livre d'or, tables, cérémonie religieuse, réception)
 --  À exécuter dans : Supabase > SQL Editor > New query > Run
 --  Rejouable sans danger (create if not exists / create or replace).
@@ -10,7 +10,7 @@
 -- 1. TABLES
 -- ---------------------------------------------------------------------
 
--- Un événement = un mariage civil. Il appartient au compte des mariés (owner_id).
+-- Un événement = un mariage coutumier. Il appartient au compte des mariés (owner_id).
 create table if not exists public.events (
   id            uuid primary key default gen_random_uuid(),
   owner_id      uuid not null references auth.users(id) on delete cascade,
@@ -18,9 +18,9 @@ create table if not exists public.events (
   groom_name    text not null default 'Elvis',
   bride_name    text not null default 'Celia',
 
-  -- Mariage civil
+  -- Cérémonie
   civil_date    date,
-  civil_time    text,
+  civil_time    text default '16h00',
   civil_place   text,
 
   map_url       text,         -- lien Google Maps (facultatif)

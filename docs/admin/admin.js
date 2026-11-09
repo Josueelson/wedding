@@ -1,4 +1,4 @@
-/* Back-office des mariés — Mariage Civil */
+/* Back-office des mariés — Mariage Coutumier */
 
 function loadScript(src) {
     return new Promise((resolve, reject) => {
@@ -401,7 +401,7 @@ document.addEventListener('alpine:init', () => {
         },
         get mailHref() {
             const g = this.shareGuestObj || {};
-            return `mailto:${g.email || ''}?subject=${encodeURIComponent('Invitation au mariage civil de ' + C.coupleNames(this.event))}&body=${encodeURIComponent(this.shareText)}`;
+            return `mailto:${g.email || ''}?subject=${encodeURIComponent('Invitation au mariage coutumier de ' + C.coupleNames(this.event))}&body=${encodeURIComponent(this.shareText)}`;
         },
         shareGuest(g, fromQueue = false, replaceTop = false) {
             this.shareId = g.id;
@@ -447,7 +447,7 @@ document.addEventListener('alpine:init', () => {
         },
         async nativeShare() {
             try {
-                await navigator.share({ title: 'Invitation au mariage civil de ' + C.coupleNames(this.event), text: this.shareText });
+                await navigator.share({ title: 'Invitation au mariage coutumier de ' + C.coupleNames(this.event), text: this.shareText });
                 this.markShared(this.shareGuestObj);
             } catch (e) { /* annulé */ }
         },
@@ -571,7 +571,7 @@ document.addEventListener('alpine:init', () => {
             const sd = this.sd || {};
             return [
                 { id: 'couple', icon: 'fa-heart', title: 'Les mariés', sub: `${sd.groom_name || ''} & ${sd.bride_name || ''}` },
-                { id: 'dates', icon: 'fa-calendar-days', title: 'Mariage civil — Lieu & date', sub: C.dateLong(sd.civil_date) || 'Date, heure, adresse' },
+                { id: 'dates', icon: 'fa-calendar-days', title: 'Mariage coutumier — Lieu, date & heure', sub: C.dateLong(sd.civil_date) || 'Date, heure, adresse' },
                 { id: 'texts', icon: 'fa-pen-fancy', title: "Textes de l'invitation", sub: 'Accueil, informations, mot de fin' },
                 { id: 'rsvp', icon: 'fa-reply', title: 'Réponses des invités', sub: sd.rsvp_deadline ? 'Avant le ' + C.dateNoDay(sd.rsvp_deadline) : 'Date limite de réponse' },
                 { id: 'share', icon: 'fa-share-nodes', title: "Message d'envoi", sub: 'Modèle WhatsApp / SMS' },

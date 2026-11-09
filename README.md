@@ -1,6 +1,6 @@
-# Invitation de Mariage Civil — Elvis Lusima & Celia Petemoya
+# Invitation de Mariage Coutumier — Elvis Lusima & Celia Petemoya
 
-Site d'invitation personnalisée + back-office pour les mariés (version mariage civil simplifiée).
+Site d'invitation personnalisée + back-office pour les mariés (version mariage coutumier).
 Hébergement : **GitHub Pages** (dossier `docs/`) · Base de données : **Supabase**.
 
 ```
@@ -58,7 +58,7 @@ Le back-office est optimisé pour mobile (PWA ajoutable à l'écran d'accueil) a
 |---|---|
 | **Accueil** | Compte à rebours du 06/12/2026, décompte présents/absents/en attente, barre de progression des confirmations, alertes d'envois et relances. |
 | **Invités** | Liste complète, recherche rapide, filtres (présents, absents, à relancer, non envoyés), ajout individuel, import groupé, export CSV, partage direct WhatsApp/SMS/QR code. |
-| **Réglages** | Prénoms des mariés, date et lieu du mariage civil, lien Google Maps, date limite RSVP, textes d'accueil et de fin, modèle du message d'envoi. |
+| **Réglages** | Prénoms des mariés, date, heure (16h00) et lieu du mariage coutumier, lien Google Maps, date limite RSVP, textes d'accueil et de fin, modèle du message d'envoi. |
 
 ## 4. Format d'import des invités
 

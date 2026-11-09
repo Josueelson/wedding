@@ -1,6 +1,5 @@
 -- =====================================================================
---  Insertion des 22 invités — Mariage Civil Elvis Lusima & Celia Petemoya
---  Schéma simplifié (civil uniquement)
+--  Insertion des 22 invités — Mariage Coutumier Elvis Lusima & Celia Petemoya
 --  À exécuter dans : Supabase > SQL Editor > New query > Run
 -- =====================================================================
 

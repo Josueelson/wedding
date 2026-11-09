@@ -1,7 +1,7 @@
 -- =====================================================================
 --  INSTALLATION / MIGRATION COMPLÈTE — SUPABASE
---  Mariage Civil : Elvis Lusima & Celia Petemoya
---  Date : 06/12/2026
+--  Mariage Coutumier : Elvis Lusima & Celia Petemoya
+--  Date : 06/12/2026 à 16h00
 --  Lieu : Golf Faustin, Deuxième marché, Avenue Kabongo
 --
 --  À exécuter en UNE SEULE FOIS dans :
@@ -51,16 +51,16 @@ CREATE TABLE IF NOT EXISTS public.events (
   bride_name    text NOT NULL DEFAULT 'Celia Petemoya',
 
   civil_date    date DEFAULT '2026-12-06',
-  civil_time    text,
+  civil_time    text DEFAULT '16h00',
   civil_place   text DEFAULT 'Golf Faustin, Deuxième marché, Avenue Kabongo',
 
   map_url       text DEFAULT 'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
   rsvp_deadline date,
 
-  welcome_text  text DEFAULT 'C''est avec une immense joie que {mariés} vous convient à célébrer leur mariage civil.',
+  welcome_text  text DEFAULT 'C''est avec une immense joie que {mariés} vous convient à célébrer leur mariage coutumier.',
   info_text     text DEFAULT 'Tenue de cérémonie chic & élégante. Votre présence rendra cette journée encore plus spéciale.',
   closing_text  text DEFAULT 'Au plaisir de vous retrouver pour cette occasion spéciale.' || chr(10) || 'Avec tout notre amour,',
-  share_message text DEFAULT 'Bonjour {nom} 👋' || chr(10) || chr(10) || '{mariés} ont la joie de vous inviter à leur mariage civil. Voici votre invitation personnelle : vous pouvez y confirmer votre présence et le nombre de personnes.' || chr(10) || chr(10) || '{lien}',
+  share_message text DEFAULT 'Bonjour {nom} 👋' || chr(10) || chr(10) || '{mariés} ont la joie de vous inviter à leur mariage coutumier. Voici votre invitation personnelle : vous pouvez y confirmer votre présence et le nombre de personnes.' || chr(10) || chr(10) || '{lien}',
 
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now()
@@ -236,25 +236,31 @@ BEGIN
   SELECT id INTO v_event_id FROM public.events LIMIT 1;
 
   IF v_event_id IS NULL THEN
-    INSERT INTO public.events (owner_id, groom_name, bride_name, civil_date, civil_place, map_url)
+    INSERT INTO public.events (owner_id, groom_name, bride_name, civil_date, civil_time, civil_place, map_url, welcome_text, share_message)
     VALUES (
       v_user_id,
       'Elvis Lusima',
       'Celia Petemoya',
       '2026-12-06',
+      '16h00',
       'Golf Faustin, Deuxième marché, Avenue Kabongo',
-      'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9'
+      'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
+      'C''est avec une immense joie que {mariés} vous convient à célébrer leur mariage coutumier.',
+      'Bonjour {nom} 👋' || chr(10) || chr(10) || '{mariés} ont la joie de vous inviter à leur mariage coutumier. Voici votre invitation personnelle : vous pouvez y confirmer votre présence et le nombre de personnes.' || chr(10) || chr(10) || '{lien}'
     )
     RETURNING id INTO v_event_id;
   ELSE
     UPDATE public.events SET
-      groom_name  = 'Elvis Lusima',
-      bride_name  = 'Celia Petemoya',
-      civil_date  = '2026-12-06',
-      civil_place = 'Golf Faustin, Deuxième marché, Avenue Kabongo',
-      map_url     = 'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
-      owner_id    = coalesce(owner_id, v_user_id),
-      updated_at  = now()
+      groom_name    = 'Elvis Lusima',
+      bride_name    = 'Celia Petemoya',
+      civil_date    = '2026-12-06',
+      civil_time    = '16h00',
+      civil_place   = 'Golf Faustin, Deuxième marché, Avenue Kabongo',
+      map_url       = 'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
+      welcome_text  = 'C''est avec une immense joie que {mariés} vous convient à célébrer leur mariage coutumier.',
+      share_message = 'Bonjour {nom} 👋' || chr(10) || chr(10) || '{mariés} ont la joie de vous inviter à leur mariage coutumier. Voici votre invitation personnelle : vous pouvez y confirmer votre présence et le nombre de personnes.' || chr(10) || chr(10) || '{lien}',
+      owner_id      = coalesce(owner_id, v_user_id),
+      updated_at    = now()
     WHERE id = v_event_id;
   END IF;
 

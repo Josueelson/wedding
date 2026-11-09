@@ -73,9 +73,9 @@
     const coupleNames = (ev) => `${ev.groom_name} et ${ev.bride_name}`;
 
     const DEFAULT_SHARE_MESSAGE =
-        'Bonjour {nom} 👋\n\n{mariés} ont la joie de vous inviter à leur mariage civil. ' +
+        'Bonjour {nom} 👋\n\n{mariés} ont la joie de vous inviter à leur mariage coutumier. ' +
         'Voici votre invitation personnelle : vous pouvez y confirmer votre présence ' +
-        'et laisser un mot aux mariés.\n\n{lien}';
+        'et le nombre de personnes.\n\n{lien}';
 
     function renderShareMessage(tpl, ev, guest) {
         return (tpl || DEFAULT_SHARE_MESSAGE)
@@ -85,16 +85,16 @@
             .replaceAll('{lien}', inviteUrl(guest.token));
     }
 
-    // Valeurs initiales de l'événement (mariage civil Elvis & Celia)
+    // Valeurs initiales de l'événement (mariage coutumier Elvis & Celia)
     const DEFAULT_EVENT = {
         groom_name:    'Elvis Lusima',
         bride_name:    'Celia Petemoya',
         civil_date:    '2026-12-06',
-        civil_time:    '',
+        civil_time:    '16h00',
         civil_place:   'Golf Faustin, Deuxième marché, Avenue Kabongo',
         map_url:       'https://www.google.com/maps/search/?api=1&query=Avenue+Kabongo+Deuxi%C3%A8me+march%C3%A9',
         rsvp_deadline: '',
-        welcome_text:  "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage civil.",
+        welcome_text:  "C'est avec une immense joie que {mariés} vous convient à célébrer leur mariage coutumier.",
         info_text:     "Tenue de cérémonie chic & élégante. Votre présence rendra cette journée encore plus spéciale.",
         closing_text:  "Au plaisir de vous retrouver pour cette occasion spéciale.\nAvec tout notre amour,",
         share_message: DEFAULT_SHARE_MESSAGE

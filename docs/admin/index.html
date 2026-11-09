@@ -7,9 +7,9 @@
     <meta name="robots" content="noindex,nofollow">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-title" content="Mariage Civil">
+    <meta name="apple-mobile-web-app-title" content="Mariage Coutumier">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>Back-office — Mariage Civil Elvis &amp; Celia</title>
+    <title>Back-office — Mariage Coutumier Elvis &amp; Celia</title>
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -32,7 +32,7 @@
         <form @submit.prevent="login()" class="w-full max-w-sm mx-auto text-white space-y-5">
             <div class="text-center space-y-1 mb-2">
                 <p class="eyebrow" style="color:#DFBA73">Espace des mariés</p>
-                <h1 class="font-script text-6xl leading-tight">Mariage Civil</h1>
+                <h1 class="font-script text-6xl leading-tight">Mariage Coutumier</h1>
                 <p class="text-sm text-white/70">Elvis Lusima &amp; Celia Petemoya</p>
             </div>
 
@@ -101,7 +101,7 @@
             <section x-show="tab === 'home'" class="space-y-4">
 
                 <div class="hero-card">
-                    <p class="eyebrow" style="color:#DFBA73">Mariage Civil</p>
+                    <p class="eyebrow" style="color:#DFBA73">Mariage Coutumier</p>
                     <h2 class="font-script text-[2.9rem] leading-tight mt-1" x-text="event ? event.groom_name + ' & ' + event.bride_name : ''"></h2>
                     <div class="flex items-end justify-between gap-3 mt-2">
                         <p class="font-serif-luxury text-lg leading-tight" x-text="mainDate || 'Date à renseigner'"></p>
@@ -256,12 +256,12 @@
                                     </div>
                                 </template>
 
-                                <!-- Mariage civil -->
+                                <!-- Mariage coutumier -->
                                 <template x-if="s.id === 'dates'">
                                     <div class="space-y-4 pt-3">
                                         <div class="grid grid-cols-2 gap-3">
                                             <label class="field"><span class="lbl">Date</span><input class="input" type="date" x-model="sd.civil_date"></label>
-                                            <label class="field"><span class="lbl">Heure (facultatif)</span><input class="input" x-model="sd.civil_time" placeholder="Ex. 10h00" autocomplete="off"></label>
+                                            <label class="field"><span class="lbl">Heure</span><input class="input" x-model="sd.civil_time" placeholder="Ex. 16h00" autocomplete="off"></label>
                                         </div>
                                         <label class="field"><span class="lbl">Lieu / Adresse</span><input class="input" x-model="sd.civil_place" placeholder="Ex. Golf Faustin, Deuxième marché, Av. Kabongo" autocomplete="off"></label>
                                         <label class="field"><span class="lbl">Lien Google Maps (facultatif)</span><input class="input" type="url" inputmode="url" x-model="sd.map_url" placeholder="https://maps.google.com/…" autocapitalize="off"></label>
