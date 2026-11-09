@@ -1,4 +1,4 @@
-# Invitation de Mariage Coutumier — Elvis Lusima & Celia Petemoya
+# Invitation de Mariage Coutumier — Elvis Lushima & Celia Petemoya
 
 Site d'invitation personnalisée + back-office pour les mariés (version mariage coutumier).
 Hébergement : **GitHub Pages** (dossier `docs/`) · Base de données : **Supabase**.

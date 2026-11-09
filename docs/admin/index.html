@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="fr">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -13,605 +14,831 @@
     <link rel="manifest" href="manifest.webmanifest">
     <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="icons/icon-180.png">
-    <link rel="preload" href="../vendor/fonts/cormorant-garamond-latin-700-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../vendor/fonts/cormorant-garamond-latin-700-normal.woff2" as="font" type="font/woff2"
+        crossorigin>
     <link rel="stylesheet" href="../vendor/fonts/fonts.css">
     <link rel="stylesheet" href="../vendor/fa/css/all.min.css">
     <link rel="stylesheet" href="../css/tailwind.css">
     <link rel="stylesheet" href="admin.css">
 </head>
+
 <body>
-<div x-data="admin" x-cloak>
+    <div x-data="admin" x-cloak>
 
-    <!-- ============ Démarrage ============ -->
-    <div x-show="booting" class="login-bg items-center text-center text-white">
-        <i class="fa-solid fa-heart text-3xl text-[#F16E6E] animate-pulse"></i>
-    </div>
-
-    <!-- ============ Connexion ============ -->
-    <main x-show="!booting && !user" class="login-bg">
-        <form @submit.prevent="login()" class="w-full max-w-sm mx-auto text-white space-y-5">
-            <div class="text-center space-y-1 mb-2">
-                <p class="eyebrow" style="color:#DFBA73">Espace des mariés</p>
-                <h1 class="font-script text-6xl leading-tight">Mariage Coutumier</h1>
-                <p class="text-sm text-white/70">Elvis Lusima &amp; Celia Petemoya</p>
-            </div>
-
-            <div class="card !bg-white/95 !border-white/40 p-5 space-y-4 text-stone-800">
-                <label class="field">
-                    <span class="lbl">Adresse e-mail</span>
-                    <input class="input" type="email" x-model="loginEmail" autocomplete="username" inputmode="email" autocapitalize="off" spellcheck="false" required placeholder="vous@exemple.com">
-                </label>
-                <label class="field">
-                    <span class="lbl">Mot de passe</span>
-                    <div class="relative">
-                        <input class="input !pr-12" :type="showPass ? 'text' : 'password'" x-model="loginPass" autocomplete="current-password" required placeholder="••••••••">
-                        <button type="button" class="icon-btn absolute right-0 top-0 !text-stone-500" @click="showPass = !showPass" :aria-label="showPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
-                            <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
-                        </button>
-                    </div>
-                </label>
-                <p x-show="loginErr" class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2" role="alert" x-text="loginErr"></p>
-                <button class="btn btn-primary w-full" :disabled="loggingIn">
-                    <i x-show="loggingIn" class="fa-solid fa-circle-notch fa-spin"></i>
-                    <span x-text="loggingIn ? 'Connexion…' : 'Se connecter'"></span>
-                </button>
-                <template x-if="demo">
-                    <div class="text-center text-xs text-stone-500 border-t border-stone-100 pt-3 space-y-2">
-                        <p><i class="fa-solid fa-flask text-[#C6A667]"></i> <strong>Mode démo</strong> — données fictives dans ce navigateur.</p>
-                        <button type="button" class="btn btn-ghost btn-sm w-full" @click="demoLogin()">Entrer en mode démo</button>
-                    </div>
-                </template>
-            </div>
-        </form>
-    </main>
-
-    <!-- ============ Application ============ -->
-    <div x-show="!booting && user">
-
-        <header class="app-bar">
-            <div class="max-w-[44rem] mx-auto flex items-center gap-2">
-                <div class="min-w-0 flex-1">
-                    <p class="eyebrow !text-[9.5px] truncate" x-text="event ? event.groom_name + ' & ' + event.bride_name : ''"></p>
-                    <h1 class="h-title text-[1.65rem] leading-tight truncate" x-text="titles[tab]"></h1>
-                </div>
-                <span x-show="demo" class="badge neutral !bg-[#F4ECDA] !text-[#8a6d2f]"><i class="fa-solid fa-flask"></i> Démo</span>
-                <button class="icon-btn" @click="refresh(true)" aria-label="Actualiser">
-                    <i class="fa-solid fa-rotate-right" :class="loading ? 'fa-spin' : ''"></i>
-                </button>
-            </div>
-        </header>
-
-        <!-- Erreur de chargement -->
-        <div x-show="loadErr && !event" class="page text-center pt-16 space-y-4">
-            <i class="fa-solid fa-cloud-bolt text-4xl text-[#C6A667]"></i>
-            <p class="font-semibold" x-text="loadErr"></p>
-            <button class="btn btn-dark" @click="refresh(true)">Réessayer</button>
+        <!-- ============ Démarrage ============ -->
+        <div x-show="booting" class="login-bg items-center text-center text-white">
+            <i class="fa-solid fa-heart text-3xl text-[#F16E6E] animate-pulse"></i>
         </div>
 
-        <!-- Squelette -->
-        <div x-show="!event && !loadErr" class="page space-y-3">
-            <div class="skeleton h-40"></div>
-            <div class="grid grid-cols-2 gap-3"><div class="skeleton h-28"></div><div class="skeleton h-28"></div><div class="skeleton h-28"></div><div class="skeleton h-28"></div></div>
-            <div class="skeleton h-24"></div>
-        </div>
-
-        <main x-show="event" class="page">
-
-            <!-- =================== ACCUEIL =================== -->
-            <section x-show="tab === 'home'" class="space-y-4">
-
-                <div class="hero-card">
-                    <p class="eyebrow" style="color:#DFBA73">Mariage Coutumier</p>
-                    <h2 class="font-script text-[2.9rem] leading-tight mt-1" x-text="event ? event.groom_name + ' & ' + event.bride_name : ''"></h2>
-                    <div class="flex items-end justify-between gap-3 mt-2">
-                        <p class="font-serif-luxury text-lg leading-tight" x-text="mainDate || 'Date à renseigner'"></p>
-                        <div class="text-right shrink-0" x-show="countdown">
-                            <span class="num text-4xl leading-none" x-text="countdown && countdown.n"></span>
-                            <span class="block text-[10px] uppercase tracking-widest text-white/70" x-text="countdown && countdown.label"></span>
-                        </div>
-                    </div>
+        <!-- ============ Connexion ============ -->
+        <main x-show="!booting && !user" class="login-bg">
+            <form @submit.prevent="login()" class="w-full max-w-sm mx-auto text-white space-y-5">
+                <div class="text-center space-y-1 mb-2">
+                    <p class="eyebrow" style="color:#DFBA73">Espace des mariés</p>
+                    <h1 class="font-script text-6xl leading-tight">Mariage Coutumier</h1>
+                    <p class="text-sm text-white/70">Elvis Lushima &amp; Celia Petemoya</p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-3">
-                    <button class="stat" @click="goGuests('confirmed')">
-                        <span class="label text-emerald-700"><i class="fa-solid fa-champagne-glasses"></i> Présents</span>
-                        <span class="big num block text-emerald-800" x-text="st.confirmed.length"></span>
-                        <span class="sub block" x-text="st.people + ' personne' + (st.people > 1 ? 's' : '')"></span>
-                    </button>
-                    <button class="stat" @click="goGuests('declined')">
-                        <span class="label text-rose-700"><i class="fa-regular fa-envelope"></i> Absents</span>
-                        <span class="big num block text-rose-800" x-text="st.declined.length"></span>
-                        <span class="sub block" x-text="st.declined.length + ' déclinaison(s)'"></span>
-                    </button>
-                    <button class="stat" @click="goGuests('pending')">
-                        <span class="label text-amber-700"><i class="fa-regular fa-clock"></i> En attente</span>
-                        <span class="big num block text-amber-800" x-text="st.pending.length"></span>
-                        <span class="sub block" x-text="st.opened + ' ont ouvert leur lien'"></span>
-                    </button>
-                    <button class="stat" @click="goGuests('all')">
-                        <span class="label text-stone-600"><i class="fa-regular fa-address-book"></i> Total invités</span>
-                        <span class="big num block text-[#14213D]" x-text="guests.length"></span>
-                        <span class="sub block" x-text="st.seats + ' places réservées'"></span>
-                    </button>
-                </div>
-
-                <div class="card p-4 space-y-3">
-                    <div class="flex items-baseline justify-between">
-                        <h3 class="font-semibold text-sm">Taux de réponse</h3>
-                        <span class="text-sm"><span class="num text-xl" x-text="st.rate"></span>%</span>
-                    </div>
-                    <div class="stackbar" role="img">
-                        <span :style="'background:#22A559;width:' + st.pctConfirmed + '%'"></span>
-                        <span :style="'background:#E11D48;width:' + st.pctDeclined + '%'"></span>
-                    </div>
-                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
-                        <span><i class="fa-solid fa-circle text-[8px] text-[#22A559]"></i> Présents</span>
-                        <span><i class="fa-solid fa-circle text-[8px] text-[#E11D48]"></i> Absents</span>
-                        <span><i class="fa-solid fa-circle text-[8px] text-[#E7E0D5]"></i> En attente</span>
-                    </div>
-                    <div class="pt-3 border-t border-stone-100 space-y-2">
-                        <div class="flex items-baseline justify-between text-sm">
-                            <span class="font-semibold">Personnes confirmées</span>
-                            <span><span class="num text-2xl" x-text="st.people"></span> <span class="text-stone-500 text-xs" x-text="'/ ' + st.capacity + ' places'"></span></span>
-                        </div>
-                        <div class="bar-track"><div class="bar-fill" :style="'width:' + st.pctCapacity + '%'"></div></div>
-                    </div>
-                </div>
-
-                <div class="card p-4 space-y-1" x-show="todos.length">
-                    <h3 class="font-semibold text-sm mb-1">Actions recommandées</h3>
-                    <template x-for="t in todos" :key="t.text">
-                        <div class="flex items-center gap-3 py-2 border-t border-stone-100 first:border-0">
-                            <span class="w-9 h-9 rounded-full bg-[#FFF1F1] text-[#E05A6D] flex items-center justify-center shrink-0"><i class="fa-solid" :class="t.icon"></i></span>
-                            <p class="text-sm flex-1 leading-snug" x-text="t.text"></p>
-                            <button class="btn btn-soft btn-sm" @click="t.fn()" x-text="t.btn"></button>
-                        </div>
-                    </template>
-                </div>
-            </section>
-
-            <!-- =================== INVITÉS =================== -->
-            <section x-show="tab === 'guests'" class="space-y-3">
-                <div class="sticky top-[calc(env(safe-area-inset-top)+3.9rem)] z-20 -mx-4 px-4 pt-1 pb-2 bg-[#FAF8F5]/95 backdrop-blur space-y-2">
-                    <div class="relative">
-                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
-                        <input class="input !pl-10 !pr-11" type="search" x-model.debounce.150ms="q" placeholder="Nom, téléphone…" enterkeyhint="search" autocomplete="off">
-                        <button x-show="q" class="icon-btn absolute right-0 top-0 !text-stone-400" @click="q = ''" aria-label="Effacer la recherche"><i class="fa-solid fa-circle-xmark"></i></button>
-                    </div>
-                    <div class="chips-scroll" role="group" aria-label="Filtrer par statut">
-                        <template x-for="f in filters" :key="f.key">
-                            <button class="chip" :aria-pressed="filter === f.key" @click="filter = f.key">
-                                <span x-text="f.label"></span><span class="n" x-text="f.count"></span>
+                <div class="card !bg-white/95 !border-white/40 p-5 space-y-4 text-stone-800">
+                    <label class="field">
+                        <span class="lbl">Adresse e-mail</span>
+                        <input class="input" type="email" x-model="loginEmail" autocomplete="username" inputmode="email"
+                            autocapitalize="off" spellcheck="false" required placeholder="vous@exemple.com">
+                    </label>
+                    <label class="field">
+                        <span class="lbl">Mot de passe</span>
+                        <div class="relative">
+                            <input class="input !pr-12" :type="showPass ? 'text' : 'password'" x-model="loginPass"
+                                autocomplete="current-password" required placeholder="••••••••">
+                            <button type="button" class="icon-btn absolute right-0 top-0 !text-stone-500"
+                                @click="showPass = !showPass"
+                                :aria-label="showPass ? 'Masquer le mot de passe' : 'Afficher le mot de passe'">
+                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
                             </button>
-                        </template>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                    <select class="input !min-h-[40px] !py-1.5 !text-sm flex-1" x-model="sort" aria-label="Trier">
-                        <option value="name">Tri : A → Z</option>
-                        <option value="recent">Tri : plus récents</option>
-                    </select>
-                    <select class="input !min-h-[40px] !py-1.5 !text-sm flex-1" x-model="catFilter" aria-label="Catégorie" x-show="categories.length">
-                        <option value="">Toutes catégories</option>
-                        <template x-for="c in categories" :key="c"><option :value="c" x-text="c"></option></template>
-                    </select>
-                </div>
-
-                <div class="flex items-center justify-between text-xs text-stone-500 px-1">
-                    <span x-text="filteredGuests.length + ' invitation(s) · ' + sumPeople(filteredGuests) + ' pers. confirmée(s)'"></span>
-                    <span class="flex gap-1">
-                        <button class="btn btn-ghost btn-sm !min-h-[36px]" @click="openImport()"><i class="fa-solid fa-file-import"></i> Importer</button>
-                        <button class="btn btn-ghost btn-sm !min-h-[36px]" @click="exportCsv()"><i class="fa-solid fa-file-arrow-down"></i> CSV</button>
-                    </span>
-                </div>
-
-                <div class="space-y-2.5">
-                    <template x-for="g in filteredGuests" :key="g.id">
-                        <div class="card guest-card" @click="openDetail(g)" role="button" tabindex="0" @keydown.enter="openDetail(g)">
-                            <div class="avatar" :class="g.status" x-text="initials(g)"></div>
-                            <div class="min-w-0 flex-1">
-                                <p class="font-semibold text-[15px] truncate leading-tight" x-text="label(g)"></p>
-                                <p class="text-xs text-stone-500 truncate mt-0.5" x-text="metaLine(g) || 'Aucun détail'"></p>
-                                <div class="flex items-center gap-1.5 mt-1.5">
-                                    <span class="badge" :class="g.status" x-text="statusLabel(g)"></span>
-                                    <span class="text-[11px] text-stone-400" x-show="g.shared_at" title="Invitation envoyée"><i class="fa-solid fa-paper-plane"></i></span>
-                                    <span class="text-[11px] text-stone-400" x-show="g.open_count" title="Lien ouvert"><i class="fa-regular fa-eye"></i> <span x-text="g.open_count"></span></span>
-                                </div>
-                            </div>
-                            <button class="icon-btn !bg-[#FFF1F1] !text-[#E05A6D]" @click.stop="shareGuest(g)" aria-label="Partager l'invitation"><i class="fa-solid fa-share-nodes"></i></button>
+                        </div>
+                    </label>
+                    <p x-show="loginErr"
+                        class="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2"
+                        role="alert" x-text="loginErr"></p>
+                    <button class="btn btn-primary w-full" :disabled="loggingIn">
+                        <i x-show="loggingIn" class="fa-solid fa-circle-notch fa-spin"></i>
+                        <span x-text="loggingIn ? 'Connexion…' : 'Se connecter'"></span>
+                    </button>
+                    <template x-if="demo">
+                        <div class="text-center text-xs text-stone-500 border-t border-stone-100 pt-3 space-y-2">
+                            <p><i class="fa-solid fa-flask text-[#C6A667]"></i> <strong>Mode démo</strong> — données
+                                fictives dans ce navigateur.</p>
+                            <button type="button" class="btn btn-ghost btn-sm w-full" @click="demoLogin()">Entrer en
+                                mode démo</button>
                         </div>
                     </template>
                 </div>
-
-                <div x-show="!filteredGuests.length" class="text-center py-14 space-y-3 text-stone-500">
-                    <i class="fa-regular fa-face-smile-beam text-4xl text-[#C6A667]"></i>
-                    <p class="font-semibold text-stone-700" x-text="guests.length ? 'Aucun résultat' : 'Aucun invité pour le moment'"></p>
-                    <p class="text-sm" x-text="guests.length ? 'Essayez un autre filtre ou une autre recherche.' : 'Ajoutez votre premier invité avec le bouton +, ou importez votre liste.'"></p>
-                    <button x-show="guests.length" class="btn btn-ghost btn-sm" @click="q = ''; filter = 'all'; catFilter = ''">Réinitialiser les filtres</button>
-                </div>
-
-                <button class="fab" @click="openForm()" aria-label="Ajouter un invité"><i class="fa-solid fa-plus"></i></button>
-            </section>
-
-            <!-- =================== RÉGLAGES =================== -->
-            <section x-show="tab === 'settings'" class="space-y-3">
-
-                <template x-for="s in settingSections" :key="s.id">
-                    <div class="card overflow-hidden">
-                        <button class="w-full flex items-center gap-3 p-4 text-left" @click="sec = sec === s.id ? '' : s.id" :aria-expanded="sec === s.id">
-                            <span class="w-10 h-10 rounded-xl bg-[#F4ECDA] text-[#8a6d2f] flex items-center justify-center shrink-0"><i class="fa-solid" :class="s.icon"></i></span>
-                            <span class="flex-1 min-w-0"><span class="block font-semibold" x-text="s.title"></span><span class="block text-xs text-stone-500 truncate" x-text="s.sub"></span></span>
-                            <i class="fa-solid fa-chevron-down text-xs text-stone-400 transition-transform" :class="sec === s.id ? 'rotate-180' : ''"></i>
-                        </button>
-
-                        <div x-show="sec === s.id" x-collapse>
-                            <div class="px-4 pb-5 pt-1 space-y-4 border-t border-stone-100">
-
-                                <!-- Les mariés -->
-                                <template x-if="s.id === 'couple'">
-                                    <div class="space-y-4 pt-3">
-                                        <label class="field"><span class="lbl">Prénom / Nom du marié</span><input class="input" x-model="sd.groom_name" autocomplete="off"></label>
-                                        <label class="field"><span class="lbl">Prénom / Nom de la mariée</span><input class="input" x-model="sd.bride_name" autocomplete="off"></label>
-                                    </div>
-                                </template>
-
-                                <!-- Mariage coutumier -->
-                                <template x-if="s.id === 'dates'">
-                                    <div class="space-y-4 pt-3">
-                                        <div class="grid grid-cols-2 gap-3">
-                                            <label class="field"><span class="lbl">Date</span><input class="input" type="date" x-model="sd.civil_date"></label>
-                                            <label class="field"><span class="lbl">Heure</span><input class="input" x-model="sd.civil_time" placeholder="Ex. 16h00" autocomplete="off"></label>
-                                        </div>
-                                        <label class="field"><span class="lbl">Lieu / Adresse</span><input class="input" x-model="sd.civil_place" placeholder="Ex. Golf Faustin, Deuxième marché, Av. Kabongo" autocomplete="off"></label>
-                                        <label class="field"><span class="lbl">Lien Google Maps (facultatif)</span><input class="input" type="url" inputmode="url" x-model="sd.map_url" placeholder="https://maps.google.com/…" autocapitalize="off"></label>
-                                    </div>
-                                </template>
-
-                                <!-- Textes -->
-                                <template x-if="s.id === 'texts'">
-                                    <div class="space-y-4 pt-3">
-                                        <label class="field"><span class="lbl">Phrase d'accueil</span><textarea class="input" rows="3" x-model="sd.welcome_text"></textarea><span class="hint">Utilisez <code class="bg-stone-100 px-1 rounded">{mariés}</code> pour vos noms.</span></label>
-                                        <label class="field"><span class="lbl">Informations pratiques</span><textarea class="input" rows="3" x-model="sd.info_text"></textarea></label>
-                                        <label class="field"><span class="lbl">Mot de fin</span><textarea class="input" rows="3" x-model="sd.closing_text"></textarea></label>
-                                    </div>
-                                </template>
-
-                                <!-- Réponses -->
-                                <template x-if="s.id === 'rsvp'">
-                                    <div class="space-y-4 pt-3">
-                                        <label class="field"><span class="lbl">Date limite de réponse</span><input class="input" type="date" x-model="sd.rsvp_deadline"></label>
-                                    </div>
-                                </template>
-
-                                <!-- Partage -->
-                                <template x-if="s.id === 'share'">
-                                    <div class="space-y-3 pt-3">
-                                        <label class="field"><span class="lbl">Message d'envoi (WhatsApp, SMS…)</span><textarea class="input" rows="7" x-model="sd.share_message"></textarea>
-                                            <span class="hint">Variables : <code class="bg-stone-100 px-1 rounded">{nom}</code> <code class="bg-stone-100 px-1 rounded">{mariés}</code> <code class="bg-stone-100 px-1 rounded">{date}</code> <code class="bg-stone-100 px-1 rounded">{lien}</code></span></label>
-                                        <button type="button" class="btn btn-ghost btn-sm" @click="sd.share_message = Common.DEFAULT_SHARE_MESSAGE">Rétablir le message par défaut</button>
-                                    </div>
-                                </template>
-
-                                <!-- Compte -->
-                                <template x-if="s.id === 'account'">
-                                    <div class="pt-3 space-y-3">
-                                        <p class="text-sm text-stone-600">Connecté en tant que <strong x-text="user && user.email"></strong></p>
-                                        <a class="btn btn-ghost w-full" :href="previewUrl" target="_blank" rel="noopener"><i class="fa-regular fa-eye"></i> Voir une invitation (aperçu)</a>
-                                        <button class="btn btn-ghost w-full" @click="logout()"><i class="fa-solid fa-right-from-bracket"></i> Se déconnecter</button>
-                                        <template x-if="demo">
-                                            <button class="btn btn-soft w-full" @click="resetDemo()"><i class="fa-solid fa-trash-arrow-up"></i> Réinitialiser les données de démo</button>
-                                        </template>
-                                    </div>
-                                </template>
-                            </div>
-                        </div>
-                    </div>
-                </template>
-
-                <!-- Barre d'enregistrement -->
-                <div x-show="sdDirty" x-transition.opacity class="fixed left-0 right-0 z-[45] px-4" style="bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + .75rem)">
-                    <div class="max-w-[44rem] mx-auto card !rounded-2xl p-2.5 flex items-center gap-2 !shadow-2xl">
-                        <p class="text-sm flex-1 pl-2 text-stone-600">Modifications non enregistrées</p>
-                        <button class="btn btn-ghost btn-sm" @click="resetSettings()">Annuler</button>
-                        <button class="btn btn-primary btn-sm" @click="saveSettings()" :disabled="saving"><i x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i> Enregistrer</button>
-                    </div>
-                </div>
-            </section>
+            </form>
         </main>
 
-        <!-- ============ Barre d'onglets (3 onglets bien répartis) ============ -->
-        <nav class="tabbar" aria-label="Navigation principale">
-            <div class="tabbar-inner">
-                <button class="tab" @click="setTab('home')" :aria-current="tab === 'home' ? 'page' : null"><i class="fa-solid fa-house"></i>Accueil</button>
-                <button class="tab" @click="setTab('guests')" :aria-current="tab === 'guests' ? 'page' : null"><i class="fa-solid fa-user-group"></i>Invités</button>
-                <button class="tab" @click="setTab('settings')" :aria-current="tab === 'settings' ? 'page' : null"><i class="fa-solid fa-gear"></i>Réglages
-                    <span class="dot" x-show="sdDirty">!</span></button>
+        <!-- ============ Application ============ -->
+        <div x-show="!booting && user">
+
+            <header class="app-bar">
+                <div class="max-w-[44rem] mx-auto flex items-center gap-2">
+                    <div class="min-w-0 flex-1">
+                        <p class="eyebrow !text-[9.5px] truncate"
+                            x-text="event ? event.groom_name + ' & ' + event.bride_name : ''"></p>
+                        <h1 class="h-title text-[1.65rem] leading-tight truncate" x-text="titles[tab]"></h1>
+                    </div>
+                    <span x-show="demo" class="badge neutral !bg-[#F4ECDA] !text-[#8a6d2f]"><i
+                            class="fa-solid fa-flask"></i> Démo</span>
+                    <button class="icon-btn" @click="refresh(true)" aria-label="Actualiser">
+                        <i class="fa-solid fa-rotate-right" :class="loading ? 'fa-spin' : ''"></i>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Erreur de chargement -->
+            <div x-show="loadErr && !event" class="page text-center pt-16 space-y-4">
+                <i class="fa-solid fa-cloud-bolt text-4xl text-[#C6A667]"></i>
+                <p class="font-semibold" x-text="loadErr"></p>
+                <button class="btn btn-dark" @click="refresh(true)">Réessayer</button>
             </div>
-        </nav>
 
-        <!-- =================== FEUILLES =================== -->
+            <!-- Squelette -->
+            <div x-show="!event && !loadErr" class="page space-y-3">
+                <div class="skeleton h-40"></div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="skeleton h-28"></div>
+                    <div class="skeleton h-28"></div>
+                    <div class="skeleton h-28"></div>
+                    <div class="skeleton h-28"></div>
+                </div>
+                <div class="skeleton h-24"></div>
+            </div>
 
-        <!-- ---------- Fiche invité ---------- -->
-        <div x-show="isOpen('detail') && cur" class="sheet-root" style="z-index:50" @keydown.escape.window="escClose('detail')">
-            <div class="sheet-backdrop" @click="closeTop()"></div>
-            <div class="sheet" role="dialog" aria-modal="true" aria-label="Fiche invité">
-                <div class="sheet-grab"></div>
-                <template x-if="cur">
-                    <div class="flex flex-col min-h-0 flex-1">
-                        <div class="sheet-head">
-                            <div class="avatar" :class="cur.status" x-text="initials(cur)"></div>
-                            <div class="min-w-0 flex-1 ml-1">
-                                <h2 class="h-title text-2xl leading-tight truncate" x-text="label(cur)"></h2>
-                                <span class="badge" :class="cur.status" x-text="statusLabel(cur)"></span>
+            <main x-show="event" class="page">
+
+                <!-- =================== ACCUEIL =================== -->
+                <section x-show="tab === 'home'" class="space-y-4">
+
+                    <div class="hero-card">
+                        <p class="eyebrow" style="color:#DFBA73">Mariage Coutumier</p>
+                        <h2 class="font-script text-[2.9rem] leading-tight mt-1"
+                            x-text="event ? event.groom_name + ' & ' + event.bride_name : ''"></h2>
+                        <div class="flex items-end justify-between gap-3 mt-2">
+                            <p class="font-serif-luxury text-lg leading-tight" x-text="mainDate || 'Date à renseigner'">
+                            </p>
+                            <div class="text-right shrink-0" x-show="countdown">
+                                <span class="num text-4xl leading-none" x-text="countdown && countdown.n"></span>
+                                <span class="block text-[10px] uppercase tracking-widest text-white/70"
+                                    x-text="countdown && countdown.label"></span>
                             </div>
-                            <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i class="fa-solid fa-xmark text-lg"></i></button>
-                        </div>
-
-                        <div class="sheet-body">
-                            <!-- Réponse -->
-                            <p class="section-title !mt-2">Réponse</p>
-                            <div class="seg" role="group" aria-label="Statut de la réponse">
-                                <button class="s-ok" :aria-pressed="cur.status === 'confirmed'" @click="quickStatus(cur, 'confirmed')"><i class="fa-solid fa-check"></i> Présent(e)</button>
-                                <button class="s-no" :aria-pressed="cur.status === 'declined'" @click="quickStatus(cur, 'declined')"><i class="fa-solid fa-xmark"></i> Absent(e)</button>
-                                <button class="s-wait" :aria-pressed="cur.status === 'pending'" @click="quickStatus(cur, 'pending')">En attente</button>
-                            </div>
-                            <p class="text-xs text-stone-500 mt-2" x-show="cur.responded_at" x-text="'Répondu le ' + fmtTs(cur.responded_at)"></p>
-
-                            <div class="mt-3 space-y-3" x-show="cur.status === 'confirmed'">
-                                <div class="kv"><i class="fa-solid fa-users"></i><div><p class="k">Personnes présentes</p><p><span class="num text-xl" x-text="cur.people_count"></span> <span class="text-stone-500" x-text="'sur ' + cur.seats + ' place(s) réservée(s)'"></span></p></div></div>
-                            </div>
-
-                            <!-- Infos -->
-                            <p class="section-title">Informations</p>
-                            <div class="card px-4 py-1">
-                                <div class="kv" x-show="cur.phone"><i class="fa-solid fa-phone"></i><div class="min-w-0"><p class="k">Téléphone</p><a class="text-[#14213D] font-medium underline decoration-[#C6A667]" :href="'tel:' + cur.phone" x-text="cur.phone"></a></div></div>
-                                <div class="kv" x-show="cur.email"><i class="fa-regular fa-envelope"></i><div class="min-w-0"><p class="k">E-mail</p><a class="font-medium underline decoration-[#C6A667] break-all" :href="'mailto:' + cur.email" x-text="cur.email"></a></div></div>
-                                <div class="kv"><i class="fa-solid fa-chair"></i><div><p class="k">Places réservées</p><p x-text="cur.seats + ' place(s)'"></p></div></div>
-                                <div class="kv" x-show="cur.category || cur.side"><i class="fa-solid fa-tag"></i><div><p class="k">Catégorie</p><p x-text="[cur.category, cur.side ? Common.SIDES[cur.side] : ''].filter(Boolean).join(' · ')"></p></div></div>
-                                <div class="kv" x-show="cur.personal_message"><i class="fa-regular fa-comment"></i><div><p class="k">Mot personnel</p><p class="whitespace-pre-line" x-text="cur.personal_message"></p></div></div>
-                                <div class="kv" x-show="cur.notes"><i class="fa-solid fa-lock"></i><div><p class="k">Notes privées</p><p class="whitespace-pre-line" x-text="cur.notes"></p></div></div>
-                            </div>
-
-                            <p class="section-title">Suivi</p>
-                            <div class="card px-4 py-1">
-                                <div class="kv"><i class="fa-solid fa-paper-plane"></i><div><p class="k">Invitation envoyée</p><p x-text="cur.shared_at ? fmtTs(cur.shared_at) : 'Pas encore envoyée'"></p></div></div>
-                                <div class="kv"><i class="fa-regular fa-eye"></i><div><p class="k">Lien ouvert</p><p x-text="cur.open_count ? cur.open_count + ' fois · dernière : ' + fmtTs(cur.last_opened_at) : 'Jamais ouvert'"></p></div></div>
-                            </div>
-
-                            <button class="btn btn-soft btn-sm w-full mt-5 !text-rose-700" @click="askDelete(cur)"><i class="fa-regular fa-trash-can"></i> Supprimer cet invité</button>
-                        </div>
-
-                        <div class="sheet-foot">
-                            <button class="btn btn-ghost flex-1" @click="openForm(cur)"><i class="fa-solid fa-pen"></i> Modifier</button>
-                            <button class="btn btn-primary flex-[1.4]" @click="shareGuest(cur)"><i class="fa-solid fa-share-nodes"></i> Partager</button>
                         </div>
                     </div>
-                </template>
-            </div>
-        </div>
 
-        <!-- ---------- Formulaire invité ---------- -->
-        <div x-show="isOpen('form') && form" class="sheet-root" style="z-index:60" @keydown.escape.window="escClose('form')">
-            <div class="sheet-backdrop" @click="closeTop()"></div>
-            <form class="sheet" role="dialog" aria-modal="true" aria-label="Formulaire invité" @submit.prevent="saveGuest()" novalidate>
-                <div class="sheet-grab"></div>
-                <template x-if="form">
-                    <div class="flex flex-col min-h-0 flex-1">
-                        <div class="sheet-head">
-                            <h2 class="h-title text-2xl flex-1" x-text="form.id ? 'Modifier l\'invité' : 'Nouvelle invitation'"></h2>
-                            <button type="button" class="icon-btn" @click="closeTop()" aria-label="Fermer"><i class="fa-solid fa-xmark text-lg"></i></button>
+                    <div class="grid grid-cols-2 gap-3">
+                        <button class="stat" @click="goGuests('confirmed')">
+                            <span class="label text-emerald-700"><i class="fa-solid fa-champagne-glasses"></i>
+                                Présents</span>
+                            <span class="big num block text-emerald-800" x-text="st.confirmed.length"></span>
+                            <span class="sub block"
+                                x-text="st.people + ' personne' + (st.people > 1 ? 's' : '')"></span>
+                        </button>
+                        <button class="stat" @click="goGuests('declined')">
+                            <span class="label text-rose-700"><i class="fa-regular fa-envelope"></i> Absents</span>
+                            <span class="big num block text-rose-800" x-text="st.declined.length"></span>
+                            <span class="sub block" x-text="st.declined.length + ' déclinaison(s)'"></span>
+                        </button>
+                        <button class="stat" @click="goGuests('pending')">
+                            <span class="label text-amber-700"><i class="fa-regular fa-clock"></i> En attente</span>
+                            <span class="big num block text-amber-800" x-text="st.pending.length"></span>
+                            <span class="sub block" x-text="st.opened + ' ont ouvert leur lien'"></span>
+                        </button>
+                        <button class="stat" @click="goGuests('all')">
+                            <span class="label text-stone-600"><i class="fa-regular fa-address-book"></i> Total
+                                invités</span>
+                            <span class="big num block text-[#14213D]" x-text="guests.length"></span>
+                            <span class="sub block" x-text="st.seats + ' places réservées'"></span>
+                        </button>
+                    </div>
+
+                    <div class="card p-4 space-y-3">
+                        <div class="flex items-baseline justify-between">
+                            <h3 class="font-semibold text-sm">Taux de réponse</h3>
+                            <span class="text-sm"><span class="num text-xl" x-text="st.rate"></span>%</span>
                         </div>
+                        <div class="stackbar" role="img">
+                            <span :style="'background:#22A559;width:' + st.pctConfirmed + '%'"></span>
+                            <span :style="'background:#E11D48;width:' + st.pctDeclined + '%'"></span>
+                        </div>
+                        <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-stone-600">
+                            <span><i class="fa-solid fa-circle text-[8px] text-[#22A559]"></i> Présents</span>
+                            <span><i class="fa-solid fa-circle text-[8px] text-[#E11D48]"></i> Absents</span>
+                            <span><i class="fa-solid fa-circle text-[8px] text-[#E7E0D5]"></i> En attente</span>
+                        </div>
+                        <div class="pt-3 border-t border-stone-100 space-y-2">
+                            <div class="flex items-baseline justify-between text-sm">
+                                <span class="font-semibold">Personnes confirmées</span>
+                                <span><span class="num text-2xl" x-text="st.people"></span> <span
+                                        class="text-stone-500 text-xs"
+                                        x-text="'/ ' + st.capacity + ' places'"></span></span>
+                            </div>
+                            <div class="bar-track">
+                                <div class="bar-fill" :style="'width:' + st.pctCapacity + '%'"></div>
+                            </div>
+                        </div>
+                    </div>
 
-                        <div class="sheet-body space-y-4">
-                            <p class="section-title !mt-1">Qui invitez-vous ?</p>
+                    <div class="card p-4 space-y-1" x-show="todos.length">
+                        <h3 class="font-semibold text-sm mb-1">Actions recommandées</h3>
+                        <template x-for="t in todos" :key="t.text">
+                            <div class="flex items-center gap-3 py-2 border-t border-stone-100 first:border-0">
+                                <span
+                                    class="w-9 h-9 rounded-full bg-[#FFF1F1] text-[#E05A6D] flex items-center justify-center shrink-0"><i
+                                        class="fa-solid" :class="t.icon"></i></span>
+                                <p class="text-sm flex-1 leading-snug" x-text="t.text"></p>
+                                <button class="btn btn-soft btn-sm" @click="t.fn()" x-text="t.btn"></button>
+                            </div>
+                        </template>
+                    </div>
+                </section>
 
-                            <div class="field">
-                                <span class="lbl">Civilité</span>
-                                <input class="input" x-model="form.title" placeholder="Couple, Mr, Mme…" autocomplete="off" enterkeyhint="next">
-                                <div class="chips-scroll mt-2 !px-0 !mx-0">
-                                    <template x-for="t in Common.TITLES" :key="t">
-                                        <button type="button" class="chip sm" :aria-pressed="form.title === t" @click="form.title = form.title === t ? '' : t" x-text="t"></button>
+                <!-- =================== INVITÉS =================== -->
+                <section x-show="tab === 'guests'" class="space-y-3">
+                    <div
+                        class="sticky top-[calc(env(safe-area-inset-top)+3.9rem)] z-20 -mx-4 px-4 pt-1 pb-2 bg-[#FAF8F5]/95 backdrop-blur space-y-2">
+                        <div class="relative">
+                            <i
+                                class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-stone-400 text-sm"></i>
+                            <input class="input !pl-10 !pr-11" type="search" x-model.debounce.150ms="q"
+                                placeholder="Nom, téléphone…" enterkeyhint="search" autocomplete="off">
+                            <button x-show="q" class="icon-btn absolute right-0 top-0 !text-stone-400" @click="q = ''"
+                                aria-label="Effacer la recherche"><i class="fa-solid fa-circle-xmark"></i></button>
+                        </div>
+                        <div class="chips-scroll" role="group" aria-label="Filtrer par statut">
+                            <template x-for="f in filters" :key="f.key">
+                                <button class="chip" :aria-pressed="filter === f.key" @click="filter = f.key">
+                                    <span x-text="f.label"></span><span class="n" x-text="f.count"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <select class="input !min-h-[40px] !py-1.5 !text-sm flex-1" x-model="sort" aria-label="Trier">
+                            <option value="name">Tri : A → Z</option>
+                            <option value="recent">Tri : plus récents</option>
+                        </select>
+                        <select class="input !min-h-[40px] !py-1.5 !text-sm flex-1" x-model="catFilter"
+                            aria-label="Catégorie" x-show="categories.length">
+                            <option value="">Toutes catégories</option>
+                            <template x-for="c in categories" :key="c">
+                                <option :value="c" x-text="c"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs text-stone-500 px-1">
+                        <span
+                            x-text="filteredGuests.length + ' invitation(s) · ' + sumPeople(filteredGuests) + ' pers. confirmée(s)'"></span>
+                        <span class="flex gap-1">
+                            <button class="btn btn-ghost btn-sm !min-h-[36px]" @click="openImport()"><i
+                                    class="fa-solid fa-file-import"></i> Importer</button>
+                            <button class="btn btn-ghost btn-sm !min-h-[36px]" @click="exportCsv()"><i
+                                    class="fa-solid fa-file-arrow-down"></i> CSV</button>
+                        </span>
+                    </div>
+
+                    <div class="space-y-2.5">
+                        <template x-for="g in filteredGuests" :key="g.id">
+                            <div class="card guest-card" @click="openDetail(g)" role="button" tabindex="0"
+                                @keydown.enter="openDetail(g)">
+                                <div class="avatar" :class="g.status" x-text="initials(g)"></div>
+                                <div class="min-w-0 flex-1">
+                                    <p class="font-semibold text-[15px] truncate leading-tight" x-text="label(g)"></p>
+                                    <p class="text-xs text-stone-500 truncate mt-0.5"
+                                        x-text="metaLine(g) || 'Aucun détail'"></p>
+                                    <div class="flex items-center gap-1.5 mt-1.5">
+                                        <span class="badge" :class="g.status" x-text="statusLabel(g)"></span>
+                                        <span class="text-[11px] text-stone-400" x-show="g.shared_at"
+                                            title="Invitation envoyée"><i class="fa-solid fa-paper-plane"></i></span>
+                                        <span class="text-[11px] text-stone-400" x-show="g.open_count"
+                                            title="Lien ouvert"><i class="fa-regular fa-eye"></i> <span
+                                                x-text="g.open_count"></span></span>
+                                    </div>
+                                </div>
+                                <button class="icon-btn !bg-[#FFF1F1] !text-[#E05A6D]" @click.stop="shareGuest(g)"
+                                    aria-label="Partager l'invitation"><i class="fa-solid fa-share-nodes"></i></button>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div x-show="!filteredGuests.length" class="text-center py-14 space-y-3 text-stone-500">
+                        <i class="fa-regular fa-face-smile-beam text-4xl text-[#C6A667]"></i>
+                        <p class="font-semibold text-stone-700"
+                            x-text="guests.length ? 'Aucun résultat' : 'Aucun invité pour le moment'"></p>
+                        <p class="text-sm"
+                            x-text="guests.length ? 'Essayez un autre filtre ou une autre recherche.' : 'Ajoutez votre premier invité avec le bouton +, ou importez votre liste.'">
+                        </p>
+                        <button x-show="guests.length" class="btn btn-ghost btn-sm"
+                            @click="q = ''; filter = 'all'; catFilter = ''">Réinitialiser les filtres</button>
+                    </div>
+
+                    <button class="fab" @click="openForm()" aria-label="Ajouter un invité"><i
+                            class="fa-solid fa-plus"></i></button>
+                </section>
+
+                <!-- =================== RÉGLAGES =================== -->
+                <section x-show="tab === 'settings'" class="space-y-3">
+
+                    <template x-for="s in settingSections" :key="s.id">
+                        <div class="card overflow-hidden">
+                            <button class="w-full flex items-center gap-3 p-4 text-left"
+                                @click="sec = sec === s.id ? '' : s.id" :aria-expanded="sec === s.id">
+                                <span
+                                    class="w-10 h-10 rounded-xl bg-[#F4ECDA] text-[#8a6d2f] flex items-center justify-center shrink-0"><i
+                                        class="fa-solid" :class="s.icon"></i></span>
+                                <span class="flex-1 min-w-0"><span class="block font-semibold"
+                                        x-text="s.title"></span><span class="block text-xs text-stone-500 truncate"
+                                        x-text="s.sub"></span></span>
+                                <i class="fa-solid fa-chevron-down text-xs text-stone-400 transition-transform"
+                                    :class="sec === s.id ? 'rotate-180' : ''"></i>
+                            </button>
+
+                            <div x-show="sec === s.id" x-collapse>
+                                <div class="px-4 pb-5 pt-1 space-y-4 border-t border-stone-100">
+
+                                    <!-- Les mariés -->
+                                    <template x-if="s.id === 'couple'">
+                                        <div class="space-y-4 pt-3">
+                                            <label class="field"><span class="lbl">Prénom / Nom du marié</span><input
+                                                    class="input" x-model="sd.groom_name" autocomplete="off"></label>
+                                            <label class="field"><span class="lbl">Prénom / Nom de la
+                                                    mariée</span><input class="input" x-model="sd.bride_name"
+                                                    autocomplete="off"></label>
+                                        </div>
+                                    </template>
+
+                                    <!-- Mariage coutumier -->
+                                    <template x-if="s.id === 'dates'">
+                                        <div class="space-y-4 pt-3">
+                                            <div class="grid grid-cols-2 gap-3">
+                                                <label class="field"><span class="lbl">Date</span><input class="input"
+                                                        type="date" x-model="sd.civil_date"></label>
+                                                <label class="field"><span class="lbl">Heure</span><input class="input"
+                                                        x-model="sd.civil_time" placeholder="Ex. 16h00"
+                                                        autocomplete="off"></label>
+                                            </div>
+                                            <label class="field"><span class="lbl">Lieu / Adresse</span><input
+                                                    class="input" x-model="sd.civil_place"
+                                                    placeholder="Ex. Golf Faustin, Deuxième marché, Av. Kabongo"
+                                                    autocomplete="off"></label>
+                                            <label class="field"><span class="lbl">Lien Google Maps
+                                                    (facultatif)</span><input class="input" type="url" inputmode="url"
+                                                    x-model="sd.map_url" placeholder="https://maps.google.com/…"
+                                                    autocapitalize="off"></label>
+                                        </div>
+                                    </template>
+
+                                    <!-- Textes -->
+                                    <template x-if="s.id === 'texts'">
+                                        <div class="space-y-4 pt-3">
+                                            <label class="field"><span class="lbl">Phrase d'accueil</span><textarea
+                                                    class="input" rows="3" x-model="sd.welcome_text"></textarea><span
+                                                    class="hint">Utilisez <code
+                                                        class="bg-stone-100 px-1 rounded">{mariés}</code> pour vos
+                                                    noms.</span></label>
+                                            <label class="field"><span class="lbl">Informations
+                                                    pratiques</span><textarea class="input" rows="3"
+                                                    x-model="sd.info_text"></textarea></label>
+                                            <label class="field"><span class="lbl">Mot de fin</span><textarea
+                                                    class="input" rows="3" x-model="sd.closing_text"></textarea></label>
+                                        </div>
+                                    </template>
+
+                                    <!-- Réponses -->
+                                    <template x-if="s.id === 'rsvp'">
+                                        <div class="space-y-4 pt-3">
+                                            <label class="field"><span class="lbl">Date limite de réponse</span><input
+                                                    class="input" type="date" x-model="sd.rsvp_deadline"></label>
+                                        </div>
+                                    </template>
+
+                                    <!-- Partage -->
+                                    <template x-if="s.id === 'share'">
+                                        <div class="space-y-3 pt-3">
+                                            <label class="field"><span class="lbl">Message d'envoi (WhatsApp,
+                                                    SMS…)</span><textarea class="input" rows="7"
+                                                    x-model="sd.share_message"></textarea>
+                                                <span class="hint">Variables : <code
+                                                        class="bg-stone-100 px-1 rounded">{nom}</code> <code
+                                                        class="bg-stone-100 px-1 rounded">{mariés}</code> <code
+                                                        class="bg-stone-100 px-1 rounded">{date}</code> <code
+                                                        class="bg-stone-100 px-1 rounded">{lien}</code></span></label>
+                                            <button type="button" class="btn btn-ghost btn-sm"
+                                                @click="sd.share_message = Common.DEFAULT_SHARE_MESSAGE">Rétablir le
+                                                message par défaut</button>
+                                        </div>
+                                    </template>
+
+                                    <!-- Compte -->
+                                    <template x-if="s.id === 'account'">
+                                        <div class="pt-3 space-y-3">
+                                            <p class="text-sm text-stone-600">Connecté en tant que <strong
+                                                    x-text="user && user.email"></strong></p>
+                                            <a class="btn btn-ghost w-full" :href="previewUrl" target="_blank"
+                                                rel="noopener"><i class="fa-regular fa-eye"></i> Voir une invitation
+                                                (aperçu)</a>
+                                            <button class="btn btn-ghost w-full" @click="logout()"><i
+                                                    class="fa-solid fa-right-from-bracket"></i> Se déconnecter</button>
+                                            <template x-if="demo">
+                                                <button class="btn btn-soft w-full" @click="resetDemo()"><i
+                                                        class="fa-solid fa-trash-arrow-up"></i> Réinitialiser les
+                                                    données de démo</button>
+                                            </template>
+                                        </div>
                                     </template>
                                 </div>
                             </div>
+                        </div>
+                    </template>
 
-                            <label class="field">
-                                <span class="lbl">Nom complet <span class="text-rose-600">*</span></span>
-                                <input class="input" :class="fe.full_name ? 'err' : ''" x-model="form.full_name" placeholder="Ex. Patty et Joëlle" autocomplete="off" autocapitalize="words" enterkeyhint="next" id="f-name">
-                                <span class="hint !text-rose-600" x-show="fe.full_name" x-text="fe.full_name"></span>
-                            </label>
+                    <!-- Barre d'enregistrement -->
+                    <div x-show="sdDirty" x-transition.opacity class="fixed left-0 right-0 z-[45] px-4"
+                        style="bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + .75rem)">
+                        <div class="max-w-[44rem] mx-auto card !rounded-2xl p-2.5 flex items-center gap-2 !shadow-2xl">
+                            <p class="text-sm flex-1 pl-2 text-stone-600">Modifications non enregistrées</p>
+                            <button class="btn btn-ghost btn-sm" @click="resetSettings()">Annuler</button>
+                            <button class="btn btn-primary btn-sm" @click="saveSettings()" :disabled="saving"><i
+                                    x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i> Enregistrer</button>
+                        </div>
+                    </div>
+                </section>
+            </main>
 
-                            <p class="section-title">Contact</p>
-                            <label class="field">
-                                <span class="lbl">Téléphone / WhatsApp</span>
-                                <input class="input" type="tel" inputmode="tel" x-model="form.phone" placeholder="0997 000 000" autocomplete="off" enterkeyhint="next">
-                            </label>
+            <!-- ============ Barre d'onglets (3 onglets bien répartis) ============ -->
+            <nav class="tabbar" aria-label="Navigation principale">
+                <div class="tabbar-inner">
+                    <button class="tab" @click="setTab('home')" :aria-current="tab === 'home' ? 'page' : null"><i
+                            class="fa-solid fa-house"></i>Accueil</button>
+                    <button class="tab" @click="setTab('guests')" :aria-current="tab === 'guests' ? 'page' : null"><i
+                            class="fa-solid fa-user-group"></i>Invités</button>
+                    <button class="tab" @click="setTab('settings')"
+                        :aria-current="tab === 'settings' ? 'page' : null"><i class="fa-solid fa-gear"></i>Réglages
+                        <span class="dot" x-show="sdDirty">!</span></button>
+                </div>
+            </nav>
 
-                            <p class="section-title">Classement</p>
-                            <label class="field">
-                                <span class="lbl">Catégorie</span>
-                                <input class="input" list="cat-list" x-model="form.category" placeholder="Famille, Amis…" autocomplete="off">
-                                <datalist id="cat-list"><template x-for="c in allCategories" :key="c"><option :value="c"></option></template></datalist>
-                            </label>
+            <!-- =================== FEUILLES =================== -->
 
-                            <div class="field">
-                                <span class="lbl">Places réservées (combien de personnes peuvent venir)</span>
-                                <div class="stepper">
-                                    <button type="button" @click="form.seats = Math.max(1, +form.seats - 1); clampPeople()" :disabled="+form.seats <= 1" aria-label="Moins de places">−</button>
-                                    <span class="v num" x-text="form.seats"></span>
-                                    <button type="button" @click="form.seats = Math.min(50, +form.seats + 1)" :disabled="+form.seats >= 50" aria-label="Plus de places">+</button>
+            <!-- ---------- Fiche invité ---------- -->
+            <div x-show="isOpen('detail') && cur" class="sheet-root" style="z-index:50"
+                @keydown.escape.window="escClose('detail')">
+                <div class="sheet-backdrop" @click="closeTop()"></div>
+                <div class="sheet" role="dialog" aria-modal="true" aria-label="Fiche invité">
+                    <div class="sheet-grab"></div>
+                    <template x-if="cur">
+                        <div class="flex flex-col min-h-0 flex-1">
+                            <div class="sheet-head">
+                                <div class="avatar" :class="cur.status" x-text="initials(cur)"></div>
+                                <div class="min-w-0 flex-1 ml-1">
+                                    <h2 class="h-title text-2xl leading-tight truncate" x-text="label(cur)"></h2>
+                                    <span class="badge" :class="cur.status" x-text="statusLabel(cur)"></span>
                                 </div>
+                                <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i
+                                        class="fa-solid fa-xmark text-lg"></i></button>
                             </div>
 
-                            <p class="section-title">Messages</p>
-                            <label class="field">
-                                <span class="lbl">Mot personnel (affiché sur son invitation)</span>
-                                <textarea class="input" rows="3" x-model="form.personal_message" maxlength="500" placeholder="Ex. Votre présence nous ferait chaud au cœur…"></textarea>
-                            </label>
-                            <label class="field">
-                                <span class="lbl"><i class="fa-solid fa-lock text-[10px]"></i> Notes privées</span>
-                                <textarea class="input" rows="2" x-model="form.notes" maxlength="1000"></textarea>
-                            </label>
+                            <div class="sheet-body">
+                                <!-- Réponse -->
+                                <p class="section-title !mt-2">Réponse</p>
+                                <div class="seg" role="group" aria-label="Statut de la réponse">
+                                    <button class="s-ok" :aria-pressed="cur.status === 'confirmed'"
+                                        @click="quickStatus(cur, 'confirmed')"><i class="fa-solid fa-check"></i>
+                                        Présent(e)</button>
+                                    <button class="s-no" :aria-pressed="cur.status === 'declined'"
+                                        @click="quickStatus(cur, 'declined')"><i class="fa-solid fa-xmark"></i>
+                                        Absent(e)</button>
+                                    <button class="s-wait" :aria-pressed="cur.status === 'pending'"
+                                        @click="quickStatus(cur, 'pending')">En attente</button>
+                                </div>
+                                <p class="text-xs text-stone-500 mt-2" x-show="cur.responded_at"
+                                    x-text="'Répondu le ' + fmtTs(cur.responded_at)"></p>
 
-                            <template x-if="form.id">
-                                <div>
-                                    <p class="section-title">Réponse (saisie manuelle)</p>
-                                    <div class="seg" role="group">
-                                        <button type="button" class="s-ok" :aria-pressed="form.status === 'confirmed'" @click="form.status = 'confirmed'; if (!form.people_count) form.people_count = 1">Présent(e)</button>
-                                        <button type="button" class="s-no" :aria-pressed="form.status === 'declined'" @click="form.status = 'declined'">Absent(e)</button>
-                                        <button type="button" class="s-wait" :aria-pressed="form.status === 'pending'" @click="form.status = 'pending'">En attente</button>
-                                    </div>
-                                    <div class="field mt-3" x-show="form.status === 'confirmed' && form.seats > 1">
-                                        <span class="lbl">Personnes présentes</span>
-                                        <div class="stepper">
-                                            <button type="button" @click="form.people_count = Math.max(1, +form.people_count - 1)" :disabled="+form.people_count <= 1">−</button>
-                                            <span class="v num" x-text="form.people_count"></span>
-                                            <button type="button" @click="form.people_count = Math.min(+form.seats, +form.people_count + 1)" :disabled="+form.people_count >= +form.seats">+</button>
+                                <div class="mt-3 space-y-3" x-show="cur.status === 'confirmed'">
+                                    <div class="kv"><i class="fa-solid fa-users"></i>
+                                        <div>
+                                            <p class="k">Personnes présentes</p>
+                                            <p><span class="num text-xl" x-text="cur.people_count"></span> <span
+                                                    class="text-stone-500"
+                                                    x-text="'sur ' + cur.seats + ' place(s) réservée(s)'"></span></p>
                                         </div>
                                     </div>
                                 </div>
-                            </template>
-                        </div>
 
-                        <div class="sheet-foot">
-                            <button type="button" class="btn btn-ghost" @click="closeTop()">Annuler</button>
-                            <button type="submit" class="btn btn-primary flex-1" :disabled="saving">
-                                <i x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i>
-                                <span x-text="saving ? 'Enregistrement…' : form.id ? 'Enregistrer' : 'Créer et partager'"></span>
-                            </button>
-                        </div>
-                    </div>
-                </template>
-            </form>
-        </div>
-
-        <!-- ---------- Partage ---------- -->
-        <div x-show="isOpen('share') && shareGuestObj" class="sheet-root" style="z-index:70" @keydown.escape.window="escClose('share')">
-            <div class="sheet-backdrop" @click="closeTop()"></div>
-            <div class="sheet" role="dialog" aria-modal="true" aria-label="Partager l'invitation">
-                <div class="sheet-grab"></div>
-                <template x-if="shareGuestObj">
-                    <div class="flex flex-col min-h-0 flex-1">
-                        <div class="sheet-head">
-                            <div class="min-w-0 flex-1">
-                                <p class="eyebrow">Partager l'invitation</p>
-                                <h2 class="h-title text-2xl truncate" x-text="label(shareGuestObj)"></h2>
-                                <p class="text-xs text-stone-500" x-show="shareQueue.length" x-text="shareQueue.length + ' autre(s) à envoyer ensuite'"></p>
-                            </div>
-                            <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i class="fa-solid fa-xmark text-lg"></i></button>
-                        </div>
-
-                        <div class="sheet-body space-y-4">
-                            <div class="card p-3.5 flex items-center gap-2">
-                                <i class="fa-solid fa-link text-[#C6A667] ml-1"></i>
-                                <input class="flex-1 min-w-0 bg-transparent text-sm outline-none font-mono text-stone-700 truncate" readonly :value="shareUrl" @focus="$event.target.select()" aria-label="Lien personnel">
-                                <button class="btn btn-dark btn-sm" @click="copy(shareUrl, 'Lien copié'); markShared(shareGuestObj)"><i class="fa-regular fa-copy"></i> Copier</button>
-                            </div>
-
-                            <label class="field">
-                                <span class="lbl">Message</span>
-                                <textarea class="input" rows="7" x-model="shareText"></textarea>
-                            </label>
-
-                            <div class="grid grid-cols-2 gap-2.5">
-                                <a class="btn btn-wa col-span-2" :href="waHref" target="_blank" rel="noopener" @click="markShared(shareGuestObj)">
-                                    <i class="fa-brands fa-whatsapp text-lg"></i>
-                                    <span x-text="shareGuestObj.phone ? 'Envoyer sur WhatsApp' : 'WhatsApp (choisir le contact)'"></span>
-                                </a>
-                                <button x-show="canNativeShare" class="btn btn-dark col-span-2" @click="nativeShare()"><i class="fa-solid fa-share-from-square"></i> Autres applications…</button>
-                                <a class="btn btn-ghost" :href="smsHref" @click="markShared(shareGuestObj)"><i class="fa-regular fa-message"></i> SMS</a>
-                                <button class="btn btn-ghost" @click="copy(shareText, 'Message copié'); markShared(shareGuestObj)"><i class="fa-regular fa-clipboard"></i> Copier</button>
-                                <button class="btn btn-ghost col-span-2" @click="toggleQr()"><i class="fa-solid fa-qrcode"></i> QR code</button>
-                            </div>
-
-                            <div x-show="qrOpen" x-collapse>
-                                <div class="card p-4 flex flex-col items-center gap-2">
-                                    <div x-ref="qr" class="bg-white p-3 rounded-xl"></div>
+                                <!-- Infos -->
+                                <p class="section-title">Informations</p>
+                                <div class="card px-4 py-1">
+                                    <div class="kv" x-show="cur.phone"><i class="fa-solid fa-phone"></i>
+                                        <div class="min-w-0">
+                                            <p class="k">Téléphone</p><a
+                                                class="text-[#14213D] font-medium underline decoration-[#C6A667]"
+                                                :href="'tel:' + cur.phone" x-text="cur.phone"></a>
+                                        </div>
+                                    </div>
+                                    <div class="kv" x-show="cur.email"><i class="fa-regular fa-envelope"></i>
+                                        <div class="min-w-0">
+                                            <p class="k">E-mail</p><a
+                                                class="font-medium underline decoration-[#C6A667] break-all"
+                                                :href="'mailto:' + cur.email" x-text="cur.email"></a>
+                                        </div>
+                                    </div>
+                                    <div class="kv"><i class="fa-solid fa-chair"></i>
+                                        <div>
+                                            <p class="k">Places réservées</p>
+                                            <p x-text="cur.seats + ' place(s)'"></p>
+                                        </div>
+                                    </div>
+                                    <div class="kv" x-show="cur.category || cur.side"><i class="fa-solid fa-tag"></i>
+                                        <div>
+                                            <p class="k">Catégorie</p>
+                                            <p
+                                                x-text="[cur.category, cur.side ? Common.SIDES[cur.side] : ''].filter(Boolean).join(' · ')">
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div class="kv" x-show="cur.personal_message"><i class="fa-regular fa-comment"></i>
+                                        <div>
+                                            <p class="k">Mot personnel</p>
+                                            <p class="whitespace-pre-line" x-text="cur.personal_message"></p>
+                                        </div>
+                                    </div>
+                                    <div class="kv" x-show="cur.notes"><i class="fa-solid fa-lock"></i>
+                                        <div>
+                                            <p class="k">Notes privées</p>
+                                            <p class="whitespace-pre-line" x-text="cur.notes"></p>
+                                        </div>
+                                    </div>
                                 </div>
+
+                                <p class="section-title">Suivi</p>
+                                <div class="card px-4 py-1">
+                                    <div class="kv"><i class="fa-solid fa-paper-plane"></i>
+                                        <div>
+                                            <p class="k">Invitation envoyée</p>
+                                            <p x-text="cur.shared_at ? fmtTs(cur.shared_at) : 'Pas encore envoyée'"></p>
+                                        </div>
+                                    </div>
+                                    <div class="kv"><i class="fa-regular fa-eye"></i>
+                                        <div>
+                                            <p class="k">Lien ouvert</p>
+                                            <p
+                                                x-text="cur.open_count ? cur.open_count + ' fois · dernière : ' + fmtTs(cur.last_opened_at) : 'Jamais ouvert'">
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-soft btn-sm w-full mt-5 !text-rose-700"
+                                    @click="askDelete(cur)"><i class="fa-regular fa-trash-can"></i> Supprimer cet
+                                    invité</button>
                             </div>
 
-                            <div class="flex items-center justify-between text-xs text-stone-500 pt-1">
-                                <a class="underline" :href="shareUrl" target="_blank" rel="noopener"><i class="fa-regular fa-eye"></i> Voir son invitation</a>
-                                <button class="underline py-2" @click="toggleShared(shareGuestObj)" x-text="shareGuestObj.shared_at ? 'Marquer comme non envoyée' : 'Marquer comme envoyée'"></button>
+                            <div class="sheet-foot">
+                                <button class="btn btn-ghost flex-1" @click="openForm(cur)"><i
+                                        class="fa-solid fa-pen"></i> Modifier</button>
+                                <button class="btn btn-primary flex-[1.4]" @click="shareGuest(cur)"><i
+                                        class="fa-solid fa-share-nodes"></i> Partager</button>
                             </div>
-                            <p class="text-xs text-emerald-700" x-show="shareGuestObj.shared_at"><i class="fa-solid fa-circle-check"></i> <span x-text="'Envoyée le ' + fmtTs(shareGuestObj.shared_at)"></span></p>
                         </div>
+                    </template>
+                </div>
+            </div>
 
-                        <div class="sheet-foot" x-show="shareQueue.length || shareFromQueue">
-                            <button class="btn btn-ghost" @click="closeTop()">Arrêter</button>
-                            <button class="btn btn-primary flex-1" @click="nextInQueue()"><span x-text="shareQueue.length ? 'Invité suivant' : 'Terminer'"></span> <i class="fa-solid fa-arrow-right"></i></button>
+            <!-- ---------- Formulaire invité ---------- -->
+            <div x-show="isOpen('form') && form" class="sheet-root" style="z-index:60"
+                @keydown.escape.window="escClose('form')">
+                <div class="sheet-backdrop" @click="closeTop()"></div>
+                <form class="sheet" role="dialog" aria-modal="true" aria-label="Formulaire invité"
+                    @submit.prevent="saveGuest()" novalidate>
+                    <div class="sheet-grab"></div>
+                    <template x-if="form">
+                        <div class="flex flex-col min-h-0 flex-1">
+                            <div class="sheet-head">
+                                <h2 class="h-title text-2xl flex-1"
+                                    x-text="form.id ? 'Modifier l\'invité' : 'Nouvelle invitation'"></h2>
+                                <button type="button" class="icon-btn" @click="closeTop()" aria-label="Fermer"><i
+                                        class="fa-solid fa-xmark text-lg"></i></button>
+                            </div>
+
+                            <div class="sheet-body space-y-4">
+                                <p class="section-title !mt-1">Qui invitez-vous ?</p>
+
+                                <div class="field">
+                                    <span class="lbl">Civilité</span>
+                                    <input class="input" x-model="form.title" placeholder="Couple, Mr, Mme…"
+                                        autocomplete="off" enterkeyhint="next">
+                                    <div class="chips-scroll mt-2 !px-0 !mx-0">
+                                        <template x-for="t in Common.TITLES" :key="t">
+                                            <button type="button" class="chip sm" :aria-pressed="form.title === t"
+                                                @click="form.title = form.title === t ? '' : t" x-text="t"></button>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <label class="field">
+                                    <span class="lbl">Nom complet <span class="text-rose-600">*</span></span>
+                                    <input class="input" :class="fe.full_name ? 'err' : ''" x-model="form.full_name"
+                                        placeholder="Ex. Patty et Joëlle" autocomplete="off" autocapitalize="words"
+                                        enterkeyhint="next" id="f-name">
+                                    <span class="hint !text-rose-600" x-show="fe.full_name"
+                                        x-text="fe.full_name"></span>
+                                </label>
+
+                                <p class="section-title">Contact</p>
+                                <label class="field">
+                                    <span class="lbl">Téléphone / WhatsApp</span>
+                                    <input class="input" type="tel" inputmode="tel" x-model="form.phone"
+                                        placeholder="0997 000 000" autocomplete="off" enterkeyhint="next">
+                                </label>
+
+                                <p class="section-title">Classement</p>
+                                <label class="field">
+                                    <span class="lbl">Catégorie</span>
+                                    <input class="input" list="cat-list" x-model="form.category"
+                                        placeholder="Famille, Amis…" autocomplete="off">
+                                    <datalist id="cat-list"><template x-for="c in allCategories" :key="c">
+                                            <option :value="c"></option>
+                                        </template></datalist>
+                                </label>
+
+                                <div class="field">
+                                    <span class="lbl">Places réservées (combien de personnes peuvent venir)</span>
+                                    <div class="stepper">
+                                        <button type="button"
+                                            @click="form.seats = Math.max(1, +form.seats - 1); clampPeople()"
+                                            :disabled="+form.seats <= 1" aria-label="Moins de places">−</button>
+                                        <span class="v num" x-text="form.seats"></span>
+                                        <button type="button" @click="form.seats = Math.min(50, +form.seats + 1)"
+                                            :disabled="+form.seats >= 50" aria-label="Plus de places">+</button>
+                                    </div>
+                                </div>
+
+                                <p class="section-title">Messages</p>
+                                <label class="field">
+                                    <span class="lbl">Mot personnel (affiché sur son invitation)</span>
+                                    <textarea class="input" rows="3" x-model="form.personal_message" maxlength="500"
+                                        placeholder="Ex. Votre présence nous ferait chaud au cœur…"></textarea>
+                                </label>
+                                <label class="field">
+                                    <span class="lbl"><i class="fa-solid fa-lock text-[10px]"></i> Notes privées</span>
+                                    <textarea class="input" rows="2" x-model="form.notes" maxlength="1000"></textarea>
+                                </label>
+
+                                <template x-if="form.id">
+                                    <div>
+                                        <p class="section-title">Réponse (saisie manuelle)</p>
+                                        <div class="seg" role="group">
+                                            <button type="button" class="s-ok"
+                                                :aria-pressed="form.status === 'confirmed'"
+                                                @click="form.status = 'confirmed'; if (!form.people_count) form.people_count = 1">Présent(e)</button>
+                                            <button type="button" class="s-no"
+                                                :aria-pressed="form.status === 'declined'"
+                                                @click="form.status = 'declined'">Absent(e)</button>
+                                            <button type="button" class="s-wait"
+                                                :aria-pressed="form.status === 'pending'"
+                                                @click="form.status = 'pending'">En attente</button>
+                                        </div>
+                                        <div class="field mt-3" x-show="form.status === 'confirmed' && form.seats > 1">
+                                            <span class="lbl">Personnes présentes</span>
+                                            <div class="stepper">
+                                                <button type="button"
+                                                    @click="form.people_count = Math.max(1, +form.people_count - 1)"
+                                                    :disabled="+form.people_count <= 1">−</button>
+                                                <span class="v num" x-text="form.people_count"></span>
+                                                <button type="button"
+                                                    @click="form.people_count = Math.min(+form.seats, +form.people_count + 1)"
+                                                    :disabled="+form.people_count >= +form.seats">+</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="sheet-foot">
+                                <button type="button" class="btn btn-ghost" @click="closeTop()">Annuler</button>
+                                <button type="submit" class="btn btn-primary flex-1" :disabled="saving">
+                                    <i x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i>
+                                    <span
+                                        x-text="saving ? 'Enregistrement…' : form.id ? 'Enregistrer' : 'Créer et partager'"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </template>
+                </form>
+            </div>
+
+            <!-- ---------- Partage ---------- -->
+            <div x-show="isOpen('share') && shareGuestObj" class="sheet-root" style="z-index:70"
+                @keydown.escape.window="escClose('share')">
+                <div class="sheet-backdrop" @click="closeTop()"></div>
+                <div class="sheet" role="dialog" aria-modal="true" aria-label="Partager l'invitation">
+                    <div class="sheet-grab"></div>
+                    <template x-if="shareGuestObj">
+                        <div class="flex flex-col min-h-0 flex-1">
+                            <div class="sheet-head">
+                                <div class="min-w-0 flex-1">
+                                    <p class="eyebrow">Partager l'invitation</p>
+                                    <h2 class="h-title text-2xl truncate" x-text="label(shareGuestObj)"></h2>
+                                    <p class="text-xs text-stone-500" x-show="shareQueue.length"
+                                        x-text="shareQueue.length + ' autre(s) à envoyer ensuite'"></p>
+                                </div>
+                                <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i
+                                        class="fa-solid fa-xmark text-lg"></i></button>
+                            </div>
+
+                            <div class="sheet-body space-y-4">
+                                <div class="card p-3.5 flex items-center gap-2">
+                                    <i class="fa-solid fa-link text-[#C6A667] ml-1"></i>
+                                    <input
+                                        class="flex-1 min-w-0 bg-transparent text-sm outline-none font-mono text-stone-700 truncate"
+                                        readonly :value="shareUrl" @focus="$event.target.select()"
+                                        aria-label="Lien personnel">
+                                    <button class="btn btn-dark btn-sm"
+                                        @click="copy(shareUrl, 'Lien copié'); markShared(shareGuestObj)"><i
+                                            class="fa-regular fa-copy"></i> Copier</button>
+                                </div>
+
+                                <label class="field">
+                                    <span class="lbl">Message</span>
+                                    <textarea class="input" rows="7" x-model="shareText"></textarea>
+                                </label>
+
+                                <div class="grid grid-cols-2 gap-2.5">
+                                    <a class="btn btn-wa col-span-2" :href="waHref" target="_blank" rel="noopener"
+                                        @click="markShared(shareGuestObj)">
+                                        <i class="fa-brands fa-whatsapp text-lg"></i>
+                                        <span
+                                            x-text="shareGuestObj.phone ? 'Envoyer sur WhatsApp' : 'WhatsApp (choisir le contact)'"></span>
+                                    </a>
+                                    <button x-show="canNativeShare" class="btn btn-dark col-span-2"
+                                        @click="nativeShare()"><i class="fa-solid fa-share-from-square"></i> Autres
+                                        applications…</button>
+                                    <a class="btn btn-ghost" :href="smsHref" @click="markShared(shareGuestObj)"><i
+                                            class="fa-regular fa-message"></i> SMS</a>
+                                    <button class="btn btn-ghost"
+                                        @click="copy(shareText, 'Message copié'); markShared(shareGuestObj)"><i
+                                            class="fa-regular fa-clipboard"></i> Copier</button>
+                                    <button class="btn btn-ghost col-span-2" @click="toggleQr()"><i
+                                            class="fa-solid fa-qrcode"></i> QR code</button>
+                                </div>
+
+                                <div x-show="qrOpen" x-collapse>
+                                    <div class="card p-4 flex flex-col items-center gap-2">
+                                        <div x-ref="qr" class="bg-white p-3 rounded-xl"></div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between text-xs text-stone-500 pt-1">
+                                    <a class="underline" :href="shareUrl" target="_blank" rel="noopener"><i
+                                            class="fa-regular fa-eye"></i> Voir son invitation</a>
+                                    <button class="underline py-2" @click="toggleShared(shareGuestObj)"
+                                        x-text="shareGuestObj.shared_at ? 'Marquer comme non envoyée' : 'Marquer comme envoyée'"></button>
+                                </div>
+                                <p class="text-xs text-emerald-700" x-show="shareGuestObj.shared_at"><i
+                                        class="fa-solid fa-circle-check"></i> <span
+                                        x-text="'Envoyée le ' + fmtTs(shareGuestObj.shared_at)"></span></p>
+                            </div>
+
+                            <div class="sheet-foot" x-show="shareQueue.length || shareFromQueue">
+                                <button class="btn btn-ghost" @click="closeTop()">Arrêter</button>
+                                <button class="btn btn-primary flex-1" @click="nextInQueue()"><span
+                                        x-text="shareQueue.length ? 'Invité suivant' : 'Terminer'"></span> <i
+                                        class="fa-solid fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- ---------- Import ---------- -->
+            <div x-show="isOpen('import')" class="sheet-root" style="z-index:60"
+                @keydown.escape.window="escClose('import')">
+                <div class="sheet-backdrop" @click="closeTop()"></div>
+                <div class="sheet" role="dialog" aria-modal="true" aria-label="Importer des invités">
+                    <div class="sheet-grab"></div>
+                    <div class="sheet-head">
+                        <h2 class="h-title text-2xl flex-1">Importer une liste</h2>
+                        <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i
+                                class="fa-solid fa-xmark text-lg"></i></button>
+                    </div>
+                    <div class="sheet-body space-y-3">
+                        <p class="text-sm text-stone-600 leading-snug">Collez vos invités, <strong>un par ligne</strong>
+                            :</p>
+                        <p class="text-xs font-mono bg-white border border-stone-200 rounded-xl p-3 leading-relaxed">Nom
+                            ; Téléphone ; Places ; Catégorie</p>
+                        <textarea class="input !text-[15px] font-mono" rows="8" x-model="importText"
+                            @input.debounce.200ms="parseImport()"
+                            placeholder="Couple Patty et Joëlle; 0998731595; 2; Amis&#10;Mme Mwanvua; 0975410527; 1; Amis"></textarea>
+                        <div x-show="importRows.length" class="card p-3 text-sm space-y-1">
+                            <p class="font-semibold text-emerald-700"><i class="fa-solid fa-circle-check"></i> <span
+                                    x-text="importRows.length + ' invité(s) prêt(s) à importer'"></span></p>
+                            <p class="text-stone-500 text-xs" x-show="importSkipped"
+                                x-text="importSkipped + ' ligne(s) ignorée(s)'"></p>
                         </div>
                     </div>
-                </template>
+                    <div class="sheet-foot">
+                        <button class="btn btn-ghost" @click="closeTop()">Annuler</button>
+                        <button class="btn btn-primary flex-1" :disabled="!importRows.length || saving"
+                            @click="doImport()">
+                            <i x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i>
+                            <span
+                                x-text="importRows.length ? 'Importer ' + importRows.length + ' invité(s)' : 'Importer'"></span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ---------- Confirmation ---------- -->
+            <div x-show="isOpen('confirm') && confirmDlg" class="sheet-root" style="z-index:90"
+                @keydown.escape.window="escClose('confirm')">
+                <div class="sheet-backdrop" @click="closeTop()"></div>
+                <div class="sheet" role="alertdialog" aria-modal="true">
+                    <div class="sheet-grab"></div>
+                    <template x-if="confirmDlg">
+                        <div class="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 text-center">
+                            <div
+                                class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-xl">
+                                <i class="fa-regular fa-trash-can"></i></div>
+                            <h2 class="h-title text-2xl" x-text="confirmDlg.title"></h2>
+                            <p class="text-sm text-stone-600 leading-snug" x-text="confirmDlg.text"></p>
+                            <div class="flex gap-2.5">
+                                <button class="btn btn-ghost flex-1" @click="closeTop()">Annuler</button>
+                                <button class="btn btn-danger flex-1" @click="confirmDlg.fn()" :disabled="saving"><span
+                                        x-text="confirmDlg.label"></span></button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
             </div>
         </div>
 
-        <!-- ---------- Import ---------- -->
-        <div x-show="isOpen('import')" class="sheet-root" style="z-index:60" @keydown.escape.window="escClose('import')">
-            <div class="sheet-backdrop" @click="closeTop()"></div>
-            <div class="sheet" role="dialog" aria-modal="true" aria-label="Importer des invités">
-                <div class="sheet-grab"></div>
-                <div class="sheet-head">
-                    <h2 class="h-title text-2xl flex-1">Importer une liste</h2>
-                    <button class="icon-btn" @click="closeTop()" aria-label="Fermer"><i class="fa-solid fa-xmark text-lg"></i></button>
+        <!-- ============ Notifications ============ -->
+        <div class="toasts" aria-live="polite">
+            <template x-for="t in toasts" :key="t.id">
+                <div class="toast-item" :class="t.type === 'err' ? 'err' : ''" role="status">
+                    <i class="fa-solid"
+                        :class="t.type === 'err' ? 'fa-triangle-exclamation' : 'fa-circle-check text-emerald-300'"></i>
+                    <span class="flex-1" x-text="t.msg"></span>
                 </div>
-                <div class="sheet-body space-y-3">
-                    <p class="text-sm text-stone-600 leading-snug">Collez vos invités, <strong>un par ligne</strong> :</p>
-                    <p class="text-xs font-mono bg-white border border-stone-200 rounded-xl p-3 leading-relaxed">Nom ; Téléphone ; Places ; Catégorie</p>
-                    <textarea class="input !text-[15px] font-mono" rows="8" x-model="importText" @input.debounce.200ms="parseImport()" placeholder="Couple Patty et Joëlle; 0998731595; 2; Amis&#10;Mme Mwanvua; 0975410527; 1; Amis"></textarea>
-                    <div x-show="importRows.length" class="card p-3 text-sm space-y-1">
-                        <p class="font-semibold text-emerald-700"><i class="fa-solid fa-circle-check"></i> <span x-text="importRows.length + ' invité(s) prêt(s) à importer'"></span></p>
-                        <p class="text-stone-500 text-xs" x-show="importSkipped" x-text="importSkipped + ' ligne(s) ignorée(s)'"></p>
-                    </div>
-                </div>
-                <div class="sheet-foot">
-                    <button class="btn btn-ghost" @click="closeTop()">Annuler</button>
-                    <button class="btn btn-primary flex-1" :disabled="!importRows.length || saving" @click="doImport()">
-                        <i x-show="saving" class="fa-solid fa-circle-notch fa-spin"></i>
-                        <span x-text="importRows.length ? 'Importer ' + importRows.length + ' invité(s)' : 'Importer'"></span>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ---------- Confirmation ---------- -->
-        <div x-show="isOpen('confirm') && confirmDlg" class="sheet-root" style="z-index:90" @keydown.escape.window="escClose('confirm')">
-            <div class="sheet-backdrop" @click="closeTop()"></div>
-            <div class="sheet" role="alertdialog" aria-modal="true">
-                <div class="sheet-grab"></div>
-                <template x-if="confirmDlg">
-                    <div class="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] space-y-4 text-center">
-                        <div class="w-14 h-14 rounded-full bg-rose-50 text-rose-600 mx-auto flex items-center justify-center text-xl"><i class="fa-regular fa-trash-can"></i></div>
-                        <h2 class="h-title text-2xl" x-text="confirmDlg.title"></h2>
-                        <p class="text-sm text-stone-600 leading-snug" x-text="confirmDlg.text"></p>
-                        <div class="flex gap-2.5">
-                            <button class="btn btn-ghost flex-1" @click="closeTop()">Annuler</button>
-                            <button class="btn btn-danger flex-1" @click="confirmDlg.fn()" :disabled="saving"><span x-text="confirmDlg.label"></span></button>
-                        </div>
-                    </div>
-                </template>
-            </div>
+            </template>
         </div>
     </div>
 
-    <!-- ============ Notifications ============ -->
-    <div class="toasts" aria-live="polite">
-        <template x-for="t in toasts" :key="t.id">
-            <div class="toast-item" :class="t.type === 'err' ? 'err' : ''" role="status">
-                <i class="fa-solid" :class="t.type === 'err' ? 'fa-triangle-exclamation' : 'fa-circle-check text-emerald-300'"></i>
-                <span class="flex-1" x-text="t.msg"></span>
-            </div>
-        </template>
-    </div>
-</div>
-
-<script src="../js/config.js"></script>
-<script src="../vendor/supabase.js"></script>
-<script src="../js/common.js"></script>
-<script src="../js/api.js"></script>
-<script src="admin.js"></script>
-<script defer src="../vendor/alpine-collapse.min.js"></script>
-<script defer src="../vendor/alpine.min.js"></script>
+    <script src="../js/config.js"></script>
+    <script src="../vendor/supabase.js"></script>
+    <script src="../js/common.js"></script>
+    <script src="../js/api.js"></script>
+    <script src="admin.js"></script>
+    <script defer src="../vendor/alpine-collapse.min.js"></script>
+    <script defer src="../vendor/alpine.min.js"></script>
 </body>
+
 </html>

@@ -1,5 +1,5 @@
 -- =====================================================================
---  Mariage Coutumier — Elvis Lusima & Celia Petemoya
+--  Mariage Coutumier — Elvis Lushima & Celia Petemoya
 --  Schéma simplifié : invitation coutumière uniquement
 --  (sans boissons, livre d'or, tables, cérémonie religieuse, réception)
 --  À exécuter dans : Supabase > SQL Editor > New query > Run

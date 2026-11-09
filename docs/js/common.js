@@ -87,7 +87,7 @@
 
     // Valeurs initiales de l'événement (mariage coutumier Elvis & Celia)
     const DEFAULT_EVENT = {
-        groom_name:    'Elvis Lusima',
+        groom_name:    'Elvis Lushima',
         bride_name:    'Celia Petemoya',
         civil_date:    '2026-12-06',
         civil_time:    '16h00',

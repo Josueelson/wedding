@@ -1,6 +1,6 @@
 -- =====================================================================
 --  INSTALLATION / MIGRATION COMPLÈTE — SUPABASE
---  Mariage Coutumier : Elvis Lusima & Celia Petemoya
+--  Mariage Coutumier : Elvis Lushima & Celia Petemoya
 --  Date : 06/12/2026 à 16h00
 --  Lieu : Golf Faustin, Deuxième marché, Avenue Kabongo
 --
@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS public.events (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id      uuid REFERENCES auth.users(id) ON DELETE CASCADE,
 
-  groom_name    text NOT NULL DEFAULT 'Elvis Lusima',
+  groom_name    text NOT NULL DEFAULT 'Elvis Lushima',
   bride_name    text NOT NULL DEFAULT 'Celia Petemoya',
 
   civil_date    date DEFAULT '2026-12-06',
@@ -239,7 +239,7 @@ BEGIN
     INSERT INTO public.events (owner_id, groom_name, bride_name, civil_date, civil_time, civil_place, map_url, welcome_text, share_message)
     VALUES (
       v_user_id,
-      'Elvis Lusima',
+      'Elvis Lushima',
       'Celia Petemoya',
       '2026-12-06',
       '16h00',
@@ -251,7 +251,7 @@ BEGIN
     RETURNING id INTO v_event_id;
   ELSE
     UPDATE public.events SET
-      groom_name    = 'Elvis Lusima',
+      groom_name    = 'Elvis Lushima',
       bride_name    = 'Celia Petemoya',
       civil_date    = '2026-12-06',
       civil_time    = '16h00',
@@ -298,6 +298,6 @@ BEGIN
     WHERE inv.event_id = v_event_id AND inv.full_name = g.full_name
   );
 
-  RAISE NOTICE 'Base de données configurée avec succès pour le mariage d''Elvis Lusima & Celia Petemoya !';
+  RAISE NOTICE 'Base de données configurée avec succès pour le mariage d''Elvis Lushima & Celia Petemoya !';
 END $$;
 

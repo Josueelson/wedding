@@ -1,10 +1,10 @@
 -- =====================================================================
---  Mise à jour de l'événement : Mariage Coutumier Elvis Lusima & Celia Petemoya
+--  Mise à jour de l'événement : Mariage Coutumier Elvis Lushima & Celia Petemoya
 --  À exécuter dans : Supabase > SQL Editor > New query > Run
 -- =====================================================================
 
 UPDATE public.events SET
-  groom_name    = 'Elvis Lusima',
+  groom_name    = 'Elvis Lushima',
   bride_name    = 'Celia Petemoya',
 
   civil_date    = '2026-12-06',
